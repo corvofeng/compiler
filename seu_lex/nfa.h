@@ -1,6 +1,6 @@
 /*
  *=============================================================================
- *    Filename:lex.h
+ *    Filename:nfa.h
  *
  *     Version: 1.0
  *  Created on: April 25, 2017
@@ -9,29 +9,33 @@
  *=============================================================================
  */
 
-#ifndef LEX_H_
-#define LEX_H_
+#ifndef NFA_H_
+#define NFA_H_
 
-#include <string>
 #include <stdio.h>
-#include "nfa.h"
+#include <string>
 
 using std::string;
 
-class Lex {
-    
+class Re2NFA {
 public:
-    static const int MAXID = 100000;
+    Re2NFA() {
+        strExpress = "";
+        statusId = 0;
+    }
     
-    Lex(string _lexFile);
-    Lex(string _lexFile, string _outCFile);
+    Re2NFA(string str) {
+        strExpress = str;
+    }
     
+    void printNFA();
     
-    void init();
+    void strToNFA();
     
-    
+   
+private:
+    string strExpress;
+    int statusId;
 };
 
-void test();
-
-#endif /* ifndef LEX */
+#endif
