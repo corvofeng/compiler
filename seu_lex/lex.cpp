@@ -11,6 +11,7 @@
 
 
 #include "lex.h"
+#include "nfa.h"
 
 int isDigit(char ch) {
     if (ch >= '0' && ch <= '9') {
@@ -21,5 +22,13 @@ int isDigit(char ch) {
 
 void test()
 {
-    printf("In lex test\n");
+    char *str = Re2NFA::re2post("a*(b|(cd?))+");
+
+    printf("%s\n", str);
+
+    str = Re2NFA::re2post("ab*(a*|(ab)*)");
+    printf("%s\n", str);
+
+    str = Re2NFA::re2post("b|(cd)?");
+    printf("%s\n", str);
 }

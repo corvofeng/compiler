@@ -15,6 +15,7 @@
 #include <string>
 #include <stdio.h>
 #include "nfa.h"
+#include "state.h"
 
 using std::string;
 

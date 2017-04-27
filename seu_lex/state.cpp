@@ -1,13 +1,19 @@
 /*
  *=============================================================================
- *    Filename:nfa.cpp
+ *    Filename:state.cpp
  *
  *     Version: 1.0
- *  Created on: April 25, 2017
+ *  Created on: April 27, 2017
  *
  *      Author: corvo
  *=============================================================================
  */
 
+#include "state.h"
 
-#include "nfa.h"
+int nstate = 0;
+
+State::State(int c, State *out, State *out1) {
+    State *s;
+    nstate ++;
+}
