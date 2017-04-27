@@ -22,13 +22,20 @@ int isDigit(char ch) {
 
 void test()
 {
-    char *str = Re2NFA::re2post("a*(b|(cd?))+");
+    Re2NFA re2NFA;
+    char *str = re2NFA.re2post("a*(b|(cd?))+");
 
     printf("%s\n", str);
 
+    State *start = re2NFA.post2nfa(str);
+
+    re2NFA.showNFA(start);
+
+    /*
     str = Re2NFA::re2post("ab*(a*|(ab)*)");
     printf("%s\n", str);
 
     str = Re2NFA::re2post("b|cd?");
     printf("%s\n", str);
+    */
 }
