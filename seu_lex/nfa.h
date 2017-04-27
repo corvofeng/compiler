@@ -53,11 +53,8 @@ public:
      * 中缀转化为后缀, 同时插入 . 作为连接符
      * 例如ab, 转化为后缀为ab.
      *
-     * 另外, 原有算法是有问题的, 当我们输入为
-     * b|cd?时, 应该转换为的结果是'bc|d?.' 也就是说, b|c的优先级比价高
-     *
-     * 但是原有算法中会转换为'bcd?.|' 曲解输入为b|(cd?), 这是不合适的. 故而有所改正
-     *
+     * 字符具有高于运算符的优先级, "m|food"匹配"m"或是"food", 如果想要匹配
+     * "mood"或是"food", 需要使用"(m|f)ood"进行匹配
      *
      */
     static char * re2post(char *re) {
@@ -119,17 +116,13 @@ public:
                         return NULL; 
                     *dst++ = *re; 
                     break; 
-                default:        // 此处与原文代码不同
+                default:
                     if(natom > 1){ 
                         --natom; 
                         *dst++ = '.'; 
                     } 
                     *dst++ = *re; 
                     natom++; 
-                    if(nalt >= 1) {
-                        --nalt;
-                        *dst ++ = '|';
-                    }
                     break;
             } 
         } 

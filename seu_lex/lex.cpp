@@ -29,6 +29,6 @@ void test()
     str = Re2NFA::re2post("ab*(a*|(ab)*)");
     printf("%s\n", str);
 
-    str = Re2NFA::re2post("b|(cd)?");
+    str = Re2NFA::re2post("b|cd?");
     printf("%s\n", str);
 }
