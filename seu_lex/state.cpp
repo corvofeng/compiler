@@ -12,5 +12,7 @@
 #include "state.h"
 
 State::State(int c, State *out, State *out1) {
-    State *s;
+    this->c = c;
+    this->out = out;
+    this->out1 = out1;
 }

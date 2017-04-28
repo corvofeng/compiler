@@ -19,18 +19,19 @@
 
 using std::string;
 
-class Lex {
-    
+class Lex
+{
+
 public:
-    static const int MAXID = 100000;
-    
-    Lex(string _lexFile);
-    Lex(string _lexFile, string _outCFile);
-    
-    
-    void init();
-    
-    
+   static const int MAXID = 100000;
+
+   Lex ( string _lexFile );
+   Lex ( string _lexFile, string _outCFile );
+
+
+   void init();
+
+
 };
 
 void test();
