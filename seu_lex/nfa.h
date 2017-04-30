@@ -43,6 +43,27 @@ public:
     ~Re2NFA()
     {
         // TODO 删除s
+        free(nfa_s);
+        nfa_s = NULL;
+        nfa_e = NULL;
+    }
+
+    std::set<State*> hasDel; // 析构时的辅助集合, 保存已经删除的节点, 阻止重复删除
+
+    /**
+     * 析构对象时, 需要考虑链表的递归引用, 一个对象不可以重复删除
+     */
+    void free(State *start) {
+        if (start == NULL ||
+            hasDel.find(start) == hasDel.end() ) {
+            return;
+        }
+
+        hasDel.insert(start);
+        free(start->out);
+        free(start->out1);
+
+        delete start;
     }
 
     void printNFA();
@@ -52,7 +73,9 @@ public:
     //private:
     string strExpress;
     int statusId;
-    State * s;      // 保存解析后的数据
+    State * nfa_s;      // 保存解析后的数据
+    State * nfa_e;		// 最终符合条件的状态
+    std::set<int> char_set; // 输入符号集合
 
     /*
      * 由后缀表达式形式转化为NFA
@@ -138,6 +161,7 @@ public:
                 default:
                     end = new State(Match, NULL, NULL);
                     start = new State(*p, end, NULL);
+                    char_set.insert(*p);
                     push(Frag(start, end));
                     break;
             }
@@ -150,7 +174,6 @@ public:
             printf("error occuerd\n");
         }
 
-        s = e.start;
 
         if(e.end->c == Match)
         {
@@ -161,9 +184,13 @@ public:
         {
             end = new State(Match, NULL, NULL);
             e.end->out1 = end;
+            e.end = end;
         }
 
-        return s;
+        nfa_s = e.start;
+        nfa_e = e.end;
+
+        return nfa_s;
     }
 
     int id = 0;
@@ -188,38 +215,43 @@ public:
             id ++;
         }
 
-        //        printf("start is %p, the c is %c, the out is %p, out1 is
-        //%p\n",
-        //                            start, start->c, start->out,
-        //start->out1);
-
-
         haveTravel.insert(start);
 
         if(start->out != NULL)
         {
-            state2id.insert(std::make_pair(start->out, id));
-            id++;
-            printf("%d -> %c -> %d\n",
-                   state2id.at(start), start->c, state2id.at(
-                       start->out));
+            if (haveTravel.find(start->out) == haveTravel.end()) {
+                state2id.insert(std::make_pair(start->out, id));
+                id++;
+            }
+            if (start->c < 256) {
+                printf("%d -> %c -> %d\n",
+                   state2id.at(start), start->c, state2id.at(start->out));
+            } else {
+                printf("%d -> [] -> %d\n", state2id.at(start), state2id.at(start->out));
+            }
             showNFA(start->out);
         }
 
         if(start->out1 != NULL)
         {
-            state2id.insert(std::make_pair(start->out1, id));
-            id++;
-            printf("%d -> %c -> %d\n",
-                   state2id.at(start), start->c, state2id.at(
-                       start->out1));
+            if (haveTravel.find(start->out1) == haveTravel.end()) {
+                state2id.insert(std::make_pair(start->out1, id));
+                id++;
+            }
+            //if (start->c < 256) {
+            //    printf("%d -> %c -> %d\n",
+            //       state2id.at(start), start->c, state2id.at(start->out1));
+            //} else {
+                printf("%d -> [] -> %d\n", state2id.at(start), state2id.at(start->out1));
+            //}
             showNFA(start->out1);
         }
+        // char p;
 
-        char p;
-
+        /*
         if(start->c < 256)
         {
+            printf("start->c is %d\n", start->c);
             p = start->c;
             printf("%d -> %c -> %d\n", id, p, id + 1);
             id ++;
@@ -233,7 +265,7 @@ public:
             showNFA(start->out);
             showNFA(start->out1);
         }
-
+        */
     }
 
     /**
@@ -244,8 +276,8 @@ public:
      * Convert infix regexp re to postfix notation
      * Insert . as explicit concatenation operator.
      *
-     * 中缀转化为后缀, 同时插入 . 作为连接符
-     * 例如ab, 转化为后缀为ab.
+     * 中缀转化为后缀, 同时插入'.'作为连接符
+     * 例如ab, 转化为后缀为'ab.'
      *
      * 字符具有高于运算符的优先级, "m|food"匹配"m"或是"food", 如果想要匹配
      * "mood"或是"food", 需要使用"(m|f)ood"进行匹配.

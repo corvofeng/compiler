@@ -12,6 +12,7 @@
 
 #include "lex.h"
 #include "nfa.h"
+#include "dfa.h"
 
 int isDigit(char ch)
 {
@@ -27,13 +28,17 @@ void test()
 {
     Re2NFA re2NFA;
     char * str = re2NFA.re2post("a*(b|(cd?))+");
-    //char *str = re2NFA.re2post("a+");
+    //char *str = re2NFA.re2post("a?");
 
     printf("%s\n", str);
 
     State * start = re2NFA.post2nfa(str);
-
     re2NFA.showNFA(start);
+
+    N2DFA n2DFA;
+    n2DFA.nfa2dfa(&re2NFA);
+
+
 
     /*
      *    str = Re2NFA::re2post("ab*(a*|(ab)*)");
