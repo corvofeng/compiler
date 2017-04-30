@@ -140,8 +140,8 @@ public:
 
                 case '*':
                     e = pop();
-                    start = new State(Split, e.start, NULL);
-                    end = new State(Split, start, NULL);
+                    end = new State(Match, NULL, NULL);
+                    start = new State(Split, e.start, end);
                     e.end->c = Split;
                     e.end->out = e.start;
                     e.end->out1 = end;

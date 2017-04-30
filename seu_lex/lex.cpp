@@ -36,7 +36,8 @@ void test()
     re2NFA.showNFA(start);
 
     N2DFA n2DFA;
-    n2DFA.nfa2dfa(&re2NFA);
+    DState *ds = n2DFA.nfa2dfa(&re2NFA);
+    n2DFA.showDFA(ds);
 
 
 

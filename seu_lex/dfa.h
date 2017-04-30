@@ -30,6 +30,51 @@ public:
 
     }
 
+
+    void free(DState *ds) {
+
+    }
+
+    std::set<DState*> haveTravel;
+    std::map<DState*, int> state2id;
+    int id = 0;
+
+    void showDFA(DState *ds) {
+
+        if (ds == NULL) {
+            return;
+        }
+
+        if (haveTravel.find(ds) != haveTravel.end()) {
+            return;
+        }
+        if (state2id.find(ds) == state2id.end()) {
+            state2id.insert(std::make_pair(ds, id));
+            id ++;
+        }
+
+
+        haveTravel.insert(ds);
+
+        for (auto pDs = ds->out.begin(); pDs != ds->out.end(); pDs++) {
+            std::pair<DState* const, int > tmpDsPair = *pDs;
+            DState* tmpDs = tmpDsPair.first;
+            if (state2id.find(tmpDs) == state2id.end()) {
+                state2id.insert(std::make_pair(tmpDs, id));
+                id ++;
+            }
+
+            if (tmpDs->isEnd) {
+                printf("%d -> %c -> [%d]\n", state2id[ds], tmpDsPair.second, state2id[tmpDs]);
+            } else {
+                printf("%d -> %c -> %d\n", state2id[ds], tmpDsPair.second, state2id[tmpDs]);
+            }
+
+            showDFA(tmpDs);
+        }
+    }
+
+
     DState* nfa2dfa(Re2NFA *nfa){
 
         State *start = nfa->nfa_s;
