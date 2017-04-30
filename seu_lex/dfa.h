@@ -23,8 +23,12 @@ DState* alreadyHave(std::list<DState *> *pDsList, DState* ds);
 class N2DFA
 {
 public:
-    N2DFA() {}
     DState *dstart;
+
+    N2DFA() {}
+    ~N2DFA() {
+
+    }
 
     DState* nfa2dfa(Re2NFA *nfa){
 
@@ -54,9 +58,9 @@ public:
             pDs->hasTravel = true;
 
             for(auto pChar = char_list.begin(); pChar != char_list.end(); pChar++) {
-                //printf("%c ", *pChar);
 
                 DState *tmpDs = new DState();
+
                 for(auto stateIterator = pDs->allState.begin();
                     stateIterator != pDs->allState.end();
                     stateIterator ++) {
@@ -68,11 +72,18 @@ public:
                     }
                 }
 
+                if (tmpDs->coreState.size() == 0) {
+                    printf("can't reach by %c\n\n\n", *pChar);
+                    delete tmpDs;
+                    continue;
+                }
+
                 // 比较现有的状态与先前状态是否重复, 如果重复, 那么采用另一种方式加入
 
                 DState *oldDs = alreadyHave(&dsList, tmpDs);
 
                 if (oldDs != NULL) {        // 说明已经存在该状态
+                    delete tmpDs;
                     printf("already has this state\n");
                     pDs->addDState(oldDs, *pChar);
                 } else {
@@ -80,17 +91,14 @@ public:
                     pDs->addDState(tmpDs, *pChar);
                     dsList.push_back(tmpDs);
                 }
+
+                printf("\n\n");
             }
         }
-
-
 
         dstart = ds;
         return dstart;
     }
-
-
-
 
     void showNFA(DState *dStart) {
 

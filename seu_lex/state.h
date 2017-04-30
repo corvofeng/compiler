@@ -77,7 +77,7 @@ public:
     std::map<DState*, int> out;		// 记录DFA节点能够到达的状态以及路径
     std::set<State*> coreState;		// 当前状态所代表的NFA状态中的核心状态, 用于之后进行状态比较
     std::set<State*> allState;		// 记录所有可能状态, 在getAllState调用后被填充
-    bool isEnd = false;
+    bool isEnd = false;             // 是否为接受节点
     bool hasTravel = false;         // 构建DFA时, 表示该状态是否已经被遍历
 
 
@@ -106,8 +106,6 @@ public:
         for(auto pCore = coreState.begin(); pCore != coreState.end(); pCore++) {
             findSimple(*pCore);
         }
-
-        printf("\n\n");
     }
 
     /*
@@ -145,7 +143,6 @@ public:
         }
 
         for (auto pDs = coreState.begin(); pDs != coreState.end(); pDs++) {
-            // 如果不在
             if(newDs->coreState.find(*pDs) == newDs->coreState.end())
                 return false;
         }
