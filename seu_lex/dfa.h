@@ -27,12 +27,23 @@ public:
 
     N2DFA() {}
     ~N2DFA() {
-
+        this->haveTravel.clear();
+        free(this->dstart);
     }
 
-
     void free(DState *ds) {
+        if (ds == NULL || haveTravel.find(ds) != haveTravel.end()) {
+            return ;
+        }
 
+        haveTravel.insert(ds);
+        for (auto pDs = ds->out.begin(); pDs != ds->out.end(); pDs++) {
+            std::pair<DState* const, int > tmpDsPair = *pDs;
+            DState* tmpDs = tmpDsPair.first;
+            //delete tmpDs;
+            free(tmpDs);
+        }
+        delete ds;
     }
 
     std::set<DState*> haveTravel;

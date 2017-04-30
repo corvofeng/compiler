@@ -55,11 +55,12 @@ public:
      */
     void free(State *start) {
         if (start == NULL ||
-            hasDel.find(start) == hasDel.end() ) {
+            hasDel.find(start) != hasDel.end() ) {
             return;
         }
 
         hasDel.insert(start);
+
         free(start->out);
         free(start->out1);
 
