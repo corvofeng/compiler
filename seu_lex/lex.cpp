@@ -10,6 +10,7 @@
  */
 
 
+#include "fstream"
 #include "lex.h"
 #include "nfa.h"
 #include "dfa.h"
@@ -26,9 +27,11 @@ int isDigit(char ch)
 
 void test()
 {
+    /*
     Re2NFA re2NFA;
-    char * str = re2NFA.re2post("a*(b|(cd?))+");
-    //char *str = re2NFA.re2post("a?");
+    //char * str = re2NFA.re2post("a*(b|(cd?))+");
+    //char *str = re2NFA.re2post("(a|b)*abb");
+    char *str = re2NFA.re2post("a+");
 
     printf("%s\n", str);
 
@@ -38,8 +41,14 @@ void test()
     N2DFA n2DFA;
     DState *ds = n2DFA.nfa2dfa(&re2NFA);
     n2DFA.showDFA(ds);
+    */
 
 
+    std::ifstream fin("../input/test.l");
+    char p[1024];
+    fin >> p;
+
+    printf("%s", p);
 
     /*
      *    str = Re2NFA::re2post("ab*(a*|(ab)*)");

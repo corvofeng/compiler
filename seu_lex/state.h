@@ -69,7 +69,7 @@ public:
 };
 
 /**
- * DFA状态
+ * DFA 节点状态
  */
 class DState {
 public:
@@ -82,12 +82,8 @@ public:
 
 
 
-    /**
+    /*
      * 此函数中的参数为DState类型, 是添加DFA的路径
-     * @brief addDState
-     * @param state
-     * @param path
-     * @return
      */
     DState& addDState(DState* pDs, int path) {
 
@@ -96,12 +92,18 @@ public:
         return *this;
     }
 
+    /*
+     * 添加到核心状态
+     */
     DState& addCoreState(State * state) {
         printf("insert state is %p\n", state);
         this->coreState.insert(state);
         return *this;
     }
 
+    /*
+     * 由所有的核心状态进行扩展, 最终表示出所有状态
+     */
     void getAllState() {
         for(auto pCore = coreState.begin(); pCore != coreState.end(); pCore++) {
             findSimple(*pCore);
@@ -135,7 +137,9 @@ public:
         }
     }
 
-    // 通过核心状态的比对, 判断两个DState是否为相同的状态
+    /*
+     * 通过核心状态的比对, 判断两个DState是否为相同的状态
+     */
     bool isSimilar(DState *newDs) {
 
         if (this->coreState.size() != newDs->coreState.size()) {

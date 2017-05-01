@@ -15,6 +15,7 @@
 #include <string>
 #include <stdio.h>
 #include "nfa.h"
+#include "dfa.h"
 #include "state.h"
 
 using std::string;
@@ -25,8 +26,8 @@ class Lex
 public:
    static const int MAXID = 100000;
 
-   Lex ( string _lexFile );
-   Lex ( string _lexFile, string _outCFile );
+   Lex (string _lexFile );
+   Lex (string _lexFile, string _outCFile );
 
 
    void init();
