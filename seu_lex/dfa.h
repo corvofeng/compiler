@@ -32,14 +32,16 @@ public:
         free(this->dstart);
     }
 
-    void free(DState *ds);
-
     std::set<DState*> haveTravel;
     std::map<DState*, int> state2id;
     int id = 0;
 
     void showDFA(DState *ds);
     DState* nfa2dfa(Re2NFA *nfa);
+
+private:
+    void free(DState *ds);
+
 };
 
 

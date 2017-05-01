@@ -1,3 +1,3 @@
 
 
-file(COPY ./test.l DESTINATION ${PROJECT_BINARY_DIR}/input)
+file(COPY ./test.l ./require.l DESTINATION ${PROJECT_BINARY_DIR}/input)
