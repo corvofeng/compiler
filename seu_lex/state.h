@@ -87,7 +87,7 @@ public:
      */
     DState& addDState(DState* pDs, int path) {
 
-        printf("add DState %p with %c\n", pDs, path);
+//        printf("add DState %p with %c\n", pDs, path);
         this->out.insert(std::make_pair(pDs, path));
         return *this;
     }
@@ -96,7 +96,7 @@ public:
      * 添加到核心状态
      */
     DState& addCoreState(State * state) {
-        printf("insert state is %p\n", state);
+ //       printf("insert state is %p\n", state);
         this->coreState.insert(state);
         return *this;
     }
@@ -120,12 +120,12 @@ public:
         }
 
         if (this->allState.find(start) == this->allState.end()) {
-            printf("add state %p\n", start);
+//          printf("add state %p\n", start);
             this->allState.insert(start);
         }
 
         if (start->c == Match) {
-            printf("add end state\n");
+//          printf("add end state\n");
             this->isEnd = true;
         } else if (start->c == Split) {
             findSimple(start->out);

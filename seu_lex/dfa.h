@@ -25,8 +25,12 @@ class N2DFA
 {
 public:
     DState *dstart;
+    Re2NFA *nfa;
 
-    N2DFA() {}
+    N2DFA(Re2NFA *re2NFA) {
+        this->nfa = re2NFA;
+    }
+
     ~N2DFA() {
         this->haveTravel.clear();
         free(this->dstart);
@@ -36,13 +40,19 @@ public:
     std::map<DState*, int> state2id;
     int id = 0;
 
-    void showDFA(DState *ds);
-    DState* nfa2dfa(Re2NFA *nfa);
+    void nfa2dfa() {
+        this->nfa2dfa(nfa);
+    }
+
+    void printDFA() {
+        this->haveTravel.clear();
+        showDFA(this->dstart);
+    }
 
 private:
+    DState* nfa2dfa(Re2NFA *nfa);
+    void showDFA(DState *ds);
     void free(DState *ds);
 
 };
-
-
 #endif

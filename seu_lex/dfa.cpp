@@ -96,11 +96,12 @@ void N2DFA::showDFA(DState *ds) {
 
 DState* N2DFA::nfa2dfa(Re2NFA *nfa) {
 
-    State *start = nfa->nfa_s;
-    printf("start pointer is %p\n", nfa->nfa_s);
-    std::set<int> char_list = nfa->char_set;
+    State *start = nfa->getStart();
 
-    printf("\n");
+    //printf("start pointer is %p\n", start);
+    std::set<int> char_list = nfa->getCharSet();
+
+    //printf("\n");
 
     if (start == NULL) {
         return NULL;
@@ -131,13 +132,13 @@ DState* N2DFA::nfa2dfa(Re2NFA *nfa) {
 
                 State* s = (*stateIterator);
                 if (s->c == *pChar) {
-                    printf("The char is %c\n", s->c);
+                   // printf("The char is %c\n", s->c);
                     tmpDs->addCoreState(s->out);
                 }
             }
 
             if (tmpDs->coreState.size() == 0) {
-                printf("can't reach by %c\n\n\n", *pChar);
+               // printf("can't reach by %c\n\n\n", *pChar);
                 delete tmpDs;
                 continue;
             }
@@ -148,7 +149,7 @@ DState* N2DFA::nfa2dfa(Re2NFA *nfa) {
 
             if (oldDs != NULL) {        // 说明已经存在该状态
                 delete tmpDs;
-                printf("already has this state\n");
+                //printf("already has this state\n");
                 pDs->addDState(oldDs, *pChar);
             } else {
                 tmpDs->getAllState();
@@ -156,7 +157,7 @@ DState* N2DFA::nfa2dfa(Re2NFA *nfa) {
                 dsList.push_back(tmpDs);
             }
 
-            printf("\n\n");
+            //printf("\n\n");
         }
     }
 

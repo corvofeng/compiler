@@ -53,13 +53,38 @@ int isNoTow(char ch)
     return 0;
 }
 
+int isTab(char ch)
+{
+    if(ch == '\t' && ch == '\n')
+        return 1;
+    return 0;
+}
+
+int isSingleQuote(char ch)
+{
+    if (ch == '\'')
+        return 1;
+    return 0;
+}
+
+int isDoubleQuote(char ch)
+{
+    if (ch == '\"')
+        return 1;
+    return 0;
+}
 %}
 
+// 此处定义了一些常量以供后面匹配时使用
 %!
 noone = isNoOne
 notow=isNoTow
 letter=isLetter
 digit=isDigit
+\t=isTab
+\n=isTab
+\'=isSingleQuote
+\"=isDoubleQuote
 %!
 
 %%
@@ -73,7 +98,7 @@ digit=isDigit
     }
 }
 %$
-(+|-|%$){digit}{digit}*(.{digit}{digit}*|%$)((E|e){digit}{digit}*|%$) {
+(%+|-|%$){digit}{digit}*(.{digit}{digit}*|%$)((E|e){digit}{digit}*|%$) {
     printf("<$NUM,%s>\n", SYLEX_TEXT);
 }
 %$
@@ -85,7 +110,7 @@ digit=isDigit
 
 }
 %$
-(%*(%=|%$))|(/(=|%$))|(+(+|=|%$))|(-(-|=|%$))|(<(<|=|%$))|(>(>|=|%$))|(=(=|%$))|(&(&|=|%$))|(%|(%||=|%$))|(^(=|%$))|(~(=|%$)) {
+(%*(%=|%$))|(/(=|%$))|(%+(%+|=|%$))|(-(-|=|%$))|(<(<|=|%$))|(>(>|=|%$))|(=(=|%$))|(&(&|=|%$))|(%|(%||=|%$))|(^(=|%$))|(~(=|%$)) {
     printf("<%s,->\n", SYLEX_TEXT);
 }
 %$

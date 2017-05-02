@@ -31,7 +31,6 @@ void test()
     /*
     Re2NFA re2NFA;
     //char * str = re2NFA.re2post("a*(b|(cd?))+");
-    char *str = re2NFA.re2post("(a|b)*abb");
     //char *str = re2NFA.re2post("*");
 
     printf("%s\n", str);
@@ -44,24 +43,31 @@ void test()
     n2DFA.showDFA(ds);
     */
 
+    /*
+     * (K|_)(K|_|L)*
+     * (+|-|$)LL*(.LL*|$)((E|e)LL*|$)
+     * "(\\+|-|$)LL*(\\.LL*|$)((E|e)LL*|$)";
+     * |M|N
+     * (*(=|$))|(/(=|$))|(+(+|=|$))|(-(-|=|$))|(<(<|=|$))|(>(>|=|$))|(=(=|$))|(&(&|=|$))|(|(||=|$))|(^(=|$))|(~(=|$))
+     * (OI*O)|(PJ*P)
+     * #include( )*((<(K|_)(K|_|L)*.h>)|("(K|_)(K|_|L)*.h"))
+
+
+    //char *str =
+    char *str = "\\(|\\)|\\{|\\}|\\[|\\]|;|,|.";
+    //char *str = "\\(|\\)";
+    Re2NFA *pRe2NFA = new Re2NFA(str);
+    pRe2NFA->strToNFA();
+
+    N2DFA n2DFA(pRe2NFA);
+    n2DFA.nfa2dfa();
+    n2DFA.printDFA();
+
+    delete pRe2NFA;
+     */
+
     Lex lex("../input/require.l", "../input/out.c");
     lex.scaner();
     lex.output();
-
-    /*
-    std::ifstream fin("../input/test.l");
-    char p[1024];
-    fin >> p;
-
-    printf("%s", p);
-    */
-    
-    /*
-     *    str = Re2NFA::re2post("ab*(a*|(ab)*)");
-     *    printf("%s\n", str);
-     *
-     *    str = Re2NFA::re2post("b|cd?");
-     *    printf("%s\n", str);
-     */
 }
 
