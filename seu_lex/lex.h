@@ -54,10 +54,10 @@ public:
     }
 
     /*
-    * delete生成的DFA以及NFA
-    * 关闭打开的文件句柄
-    * 释放stream对象
-    */
+     * delete生成的DFA以及NFA
+     * 关闭打开的文件句柄
+     * 释放stream对象
+     */
     ~Lex() {
         for (auto iter = re2NFAList.begin(); iter != re2NFAList.end(); ++iter) {
             delete *iter;
@@ -360,11 +360,30 @@ public:
         cout<<"        switch(SYLEX_STATE) {"<<endl;
 
         int state = 0;
-        for(auto dfaIter = dfa2func.begin(); dfaIter != dfa2func.end(); dfaIter++) {
-            cout << " case " << state << ":" << endl;
-            N2DFA *n2DFA = (*dfaIter).first;
+        DState *start = pN2DFA->dstart;
+        std::set<DState*> haveTravel;
+        std::map<DState*, int> state2id= pN2DFA->dState2id;
+        std::map<int, DState*> id2state = pN2DFA->id2dState;
 
 
+        int dfaNum = pN2DFA->dsCnt;
+
+        cout << dfaNum << endl;
+
+        for (int i = 0; i < dfaNum; ++i) {
+
+            DState* ds = id2state.at(i);
+            cout << "case " << i << endl;
+            //printf("case %d-> %p\n", i, ds);
+
+            for (auto path = ds->out.begin(); path != ds->out.end(); path++) {
+                DState *s = path->first;
+                int Key = path->second;
+                int toId = path->first;
+
+                cout << "from " << i << " -- " << toId << " -- " << toId << endl;
+            }
+            cout << "case over" << endl;
 
         }
     }

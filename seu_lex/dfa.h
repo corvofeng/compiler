@@ -26,6 +26,9 @@ class N2DFA
 public:
     DState *dstart;
     NFA *nfa;
+    int dsCnt = 0;
+    std::map<DState*, int> dState2id;
+    std::map<int, DState*> id2dState;
 
     N2DFA(Re2NFA *re2NFA) {
         this->nfa = re2NFA;
