@@ -292,10 +292,12 @@ State *Re2NFA::post2nfa(char *postfix)
     {
         //e.end->out1 = end;
         //printf ( "already matched\n" );
+        e.end->endFunc = this->func;
     }
     else
     {
         end = new State(Match, NULL, NULL);
+        end->endFunc = this->func;
         e.end->out1 = end;
         e.end = end;
     }

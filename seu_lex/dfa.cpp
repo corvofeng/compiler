@@ -42,7 +42,7 @@ DState* alreadyHave(std::list<DState *> *pDsList, DState* ds) {
 
 
 /*
- * 释放资源, 由析构函数调用
+ * 递归释放资源, 由析构函数调用
  */
 void N2DFA::free(DState *ds) {
     if (ds == NULL || haveTravel.find(ds) != haveTravel.end()) {
@@ -86,6 +86,9 @@ void N2DFA::showDFA(DState *ds) {
 
         if (tmpDs->isEnd) {
             printf("%d -> %c -> [%d]\n", state2id[ds], tmpDsPair.second, state2id[tmpDs]);
+            if (!tmpDs->endFunc.empty()) {
+                printf("Endfunc is %s\n", tmpDs->endFunc.c_str()) ;
+            }
         } else {
             printf("%d -> %c -> %d\n", state2id[ds], tmpDsPair.second, state2id[tmpDs]);
         }
@@ -94,7 +97,7 @@ void N2DFA::showDFA(DState *ds) {
     }
 }
 
-DState* N2DFA::nfa2dfa(Re2NFA *nfa) {
+DState* N2DFA::nfa2dfa(NFA *nfa) {
 
     State *start = nfa->getStart();
 

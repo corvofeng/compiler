@@ -25,10 +25,14 @@ class N2DFA
 {
 public:
     DState *dstart;
-    Re2NFA *nfa;
+    NFA *nfa;
 
     N2DFA(Re2NFA *re2NFA) {
         this->nfa = re2NFA;
+    }
+
+    N2DFA(NFA2LIST *nfa2List) {
+        this->nfa = nfa2List;
     }
 
     ~N2DFA() {
@@ -50,7 +54,7 @@ public:
     }
 
 private:
-    DState* nfa2dfa(Re2NFA *nfa);
+    DState* nfa2dfa(NFA *nfa);
     void showDFA(DState *ds);
     void free(DState *ds);
 

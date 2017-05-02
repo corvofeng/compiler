@@ -46,7 +46,7 @@ public:
     int c;
     State *out;
     State *out1;
-    int lastlist;
+    std::string endFunc;        // 结束状态所对应的函数, 只有该点为Match时, 值可以视为有效
 
     State() {}
     State(int c, State *out, State *out1);
@@ -80,7 +80,7 @@ public:
     bool isEnd = false;             // 是否为接受节点
     bool hasTravel = false;         // 构建DFA时, 表示该状态是否已经被遍历
 
-
+    std::string endFunc;            // 结束状态中所对应的执行函数, 只有该节点为结束状态才可以操纵该对象
 
     /*
      * 此函数中的参数为DState类型, 是添加DFA的路径
@@ -127,6 +127,7 @@ public:
         if (start->c == Match) {
 //          printf("add end state\n");
             this->isEnd = true;
+            this->endFunc = start->endFunc; // 向该状态传递结束函数
         } else if (start->c == Split) {
             findSimple(start->out);
             findSimple(start->out1);
@@ -134,6 +135,7 @@ public:
             findSimple(start->out1);
         } else {
             printf("error in dfa\n");
+            exit(1);
         }
     }
 

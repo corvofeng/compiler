@@ -44,6 +44,35 @@ void test()
     */
 
     /*
+    char *s1 = "abb";
+    char *s2 = "a";
+    char *s3 = "a*b+";
+
+    Re2NFA re2NFA1(s1, "first");
+    Re2NFA re2NFA2(s2, "second");
+    Re2NFA re2NFA3(s3, "third");
+
+    re2NFA1.strToNFA();
+    re2NFA2.strToNFA();
+    re2NFA3.strToNFA();
+
+    NFA2LIST nfaList;
+    nfaList.merge(&re2NFA1);
+    nfaList.merge(&re2NFA2);
+    nfaList.merge(&re2NFA3);
+
+
+    N2DFA n2Dfa(&nfaList);
+
+    n2Dfa.nfa2dfa();
+    n2Dfa.printDFA();
+
+    std::cout << "print over" << std::endl;
+    */
+
+
+
+    /*
      * (K|_)(K|_|L)*
      * (+|-|$)LL*(.LL*|$)((E|e)LL*|$)
      * "(\\+|-|$)LL*(\\.LL*|$)((E|e)LL*|$)";
@@ -68,6 +97,8 @@ void test()
 
     Lex lex("../input/require.l", "../input/out.c");
     lex.scaner();
+    lex.dfaMerge();
+    lex.nfa2DFA();
     lex.output();
 }
 

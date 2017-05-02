@@ -114,8 +114,8 @@ digit=isDigit
     printf("<%s,->\n", SYLEX_TEXT);
 }
 %$
-({\'}{noone}*{\'})|({\"}{notow}*{\"}) {
-    printf("<$STR,%s>\n", SYLEX_TEXT);
+({\'}{noone}*{\'})|({\"}{notow}*{\"}) { 
+	printf("<$STR,%s>\n", SYLEX_TEXT);
 }
 %$
 #include(% )*((<({letter}|_)({letter}|_|{digit})*.h>)|("({letter}|_)({letter}|_|{digit})*.h")) {
