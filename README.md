@@ -10,11 +10,13 @@ cmake ..
 make -j4
 ```
 
-
 ## Lex运行
 
 ```bash
-cd input
+cd bin
+./comp
+
+cd ../input
 gcc out.c -o out
 ./out main.c
 ```

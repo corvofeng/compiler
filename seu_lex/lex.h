@@ -76,178 +76,107 @@ public:
         delete this->out;
     }
 
-    void init();
-
-    void scaner() {
-        int state = 0;
-        int line = 0;
-        string str;
-        string outStr;
-        std::istream& input = *in;
-        std::ostream& output = *out;
-
-        while(!input.eof())
-        {
-            line ++;
-            switch (state) {
-            case 0: {
-                getline(input, str);
-                if (str.compare(0, 2, "%{") == 0) {
-                    state = 1;
-                    output << "//%{ start" << endl;
-                } else if (str.compare(0, 2, "%!") == 0) {
-                    state = 2;
-                    output << "//%! start" << endl;
-                } else if (str.compare(0, 2, "%%") == 0) {
-                    state = 3;
-                    outStr.clear();
-                    output << "//%% start" << endl;
-                }else if (str.compare(0, 2, "//") == 0) {
-                    state = 4;
-                } else {
-                    state = 0;
-                    if (!str.empty()) {
-                        printError(line, str + "error");
-                    }
-                }
-                break;
-            }
-            case 1: {
-                getline(input, str);
-                if (str.compare(0, 2, "%}") == 0) {
-                    state = 0;
-                    output << "//%} end" << endl;
-                } else {
-                    output << str << endl;
-                }
-                break;
-            }
-            case 2: {
-                getline(input, str);
-                if (str.compare(0, 2, "%!") == 0) {
-                    output << "//%! end" << endl;
-                    state = 0;
-                } else {
-                    getFunc(str, line);
-                }
-                break;
-            }
-            case 3: {
-                getline(input, str);
-                if (str.compare(0, 2, "%%") == 0) {
-                    state = 0;
-                    getRegular(outStr, line);
-                    output << "//%% end" << endl;
-                } else if (str.compare(0, 2, "%$") == 0) {
-                    getRegular(outStr, line);
-                    outStr.clear();
-                } else
-                    outStr += str;
-                break;
-            }
-            case 4: {
-                // 此处获得的是注释
-                state = 0;
-                break;
-            }
-            default:
-                printError(line, "结构不完整");
-                break;
-            }
-        }
-        if (state != 0) {
-            printError(line, "结构不完整");
-        }
-    }
+    /**
+     * 处理输入文件, 通过逐行扫描, 将输入分块. 对于恰当的块调用getFunc与getRegular函数进行
+     * 初步处理
+     *
+     * 处理时, 分别有如下对应:
+     *    'noone = isNoOne'     ->  getFunc
+     *
+     *    '% |{\t}|{\n} {  }'   -> getRegular
+     */
+    void scaner();
 
     // 记录自定义的类型的判断函数, digit->isDigit
     std::map<string, string> funcMap;
 
     // 记录自定义的类型的符号, 以便进行转换 digit->a
     std::map<string, char> type2ch;
-    std::map<char, string> ch2type;
 
-    void getFunc(string str, int line) {
+    // 此处记录符号与判断函数对应 a -> isDigit
+    std::map<char, string> ch2func;
 
-        /*
-         * 清除等式中的空格,
-         * 代码来源 :
-         * http://stackoverflow.com/questions/83439/remove-spaces-from-stdstring-in-c
-         */
-        string::iterator end_pos = std::remove(str.begin(), str.end(), ' ');
-        str.erase(end_pos, str.end());
+    /**
+     * 辅助函数: 记录不同的判断函数对应的字符串,
+     *
+     * 例如:
+     *      digit   -> isDigit
+     *      letter  -> isLetter
+     *
+     *
+     * ({letter}|_)({letter}|_|{digit})*  (需要处理的正则表达式);
+     * 虽然我们将digit对应于isDigit, 但是作为正则表达式处理时, 处理多个字符是有难度的, 如果
+     * 我们直接修改NFA与DFA的生成类, 难度很高, 代码需要做很大的修改.
+     *
+     * 这里, 我们退而求其次, 因为有一些ASCII码是永远不会出现在字符串中, 所以, 我们进行这样的
+     * 映射, 例如:
+     *      digit -> 20
+     *   对于正则表达式中的长字符, 可以直接进行替换, 这样所有的长字符就会被替换为单个字符, 正
+     * 则表达式的实现不需要做大量的修改即可实现功能
+     *
+     * 而后生成文件时通过如下的映射进行恢复:
+     *      20 -> isDigit
+     *
+     *
+     * 在本函数中定义的静态常量:
+     *   static char ch = 20;
+     *   此常量为单个字符的起始常量, 有关ASCII中0-31基本为不可见的字符, 我们选择起始值为20,
+     * 主要考虑到不会与其他字符冲突才进行这样的选择
+     *
+     */
+    void getFunc(string str, int line);
 
-        // TODO为了避免重复, 此处需要修改为不存在的char值
-        static char ch = 20;
 
-        string::iterator iter = str.begin();
-        string left, right;
-        std::istringstream f(str);
+    /**
+     *   将每一行中的正则表达式与对应的处理函数相分离开来. 而后将正则表达式的处理结果进行存放,
+     * 这里将正则表达式中的特殊部分以及需要转义的字符进行初步处理, 而后将其转化为NFA, 并且存入
+     * NFA列表中, 以便于之后进行NFA合并
+     *
+     * 函数输入:
+     * ({letter}|_)({letter}|_|{digit})* {
+     *      int id = getKeyId(SYLEX_TEXT);
+     *      if(id != 0)
+     *          printf("<%s,->\n", SYLEX_TEXT);
+     *      else {
+     *          printf("<$ID,%s>\n", SYLEX_TEXT);
+     *      }
+     * }
+     *
+     * 这里给出了一个匹配变量名的正则表达式(字母,数字,下划线组成, 只能由字母与下划线开头的字符串)
+     * 以及表达式对应的操作
+     *
+     * 首先调用getReAndFunc将正则表达式与处理逻辑相分离, 我们可以得到re以及func分别对应于两
+     * 部分,
+     *   re = ({letter}|_)({letter}|_|{digit})*
+     *   func = {...}
+     *   而后的正则表达式进行处理, 因为表达式中有{letter},{digit}这样的长名称, 因此, 我们
+     * 通过state2ch来进行 {letter} -> char 的替换.
+     *   生成的正则表达式将会变为:
+     *   re_s = (a|_)(a|_|b)*  这里的a, b仅为填充字符, 真实的替换后正则表达式中, a b均为
+     * 不可见的字符
+     *
+     * 另外:
+     *  对于(%*=?)这样的正则表达式, 因为表达式中有'*'存在, 直接匹配将会出现错误, 因此,
+     * 我们使用%进行转义, 而正则表达式中的转义为\*, 我们也在此处进行修改, 它将会变为:
+     * (\*=?)
+     *
+     * 基础的处理过正则表达式后, 我们将正则表达式与其对应的处理函数存储进入NFA类中
+     *  Re2NFA *pre2Nfa = new Re2NFA(re_s, func);
+     *
+     *
+     * @brief getRegular
+     * @param str
+     * @param line
+     */
+    void getRegular(string str, int line);
 
-        getline(f, left, '=');
-        getline(f, right, '=');
-
-
-        funcMap.insert(std::make_pair(left, right));
-        type2ch.insert(std::make_pair(left, ch));
-        ch2type.insert(std::make_pair(ch, right));
-
-        //cout << (int)ch << " <-->" << left << "<-->"  << right  << endl;
-        ch ++;
-    }
-
-    std::map<N2DFA*, string> dfa2func;
-
-    void getRegular(string str, int line) {
-        std::pair<string, string> record = getReAndFunc(str);
-        string re = record.first;
-        string func = record.second;
-        //cout << re << endl;
-
-        char re_s[1024] = {0};
-        int it = 0;
-
-        for (int i = 0; i < re.size(); ++i) {
-            char p = re.at(i);
-            switch (p) {
-            case '%': {
-                i++;
-                re_s[it++] = '\\';
-                re_s[it++] = re.at(i);
-                break;
-            }
-            case '{': {
-                i++;
-                int start = i;
-                while (re.at(i) != '}') {i++;}
-
-                string atom = re.substr(start, i - start);
-                // cout << start << " - " << i - 1 << "The atom is " << atom << endl;
-                if (type2ch.find(atom) != type2ch.end()) {
-                    re_s[it++] = type2ch.at(atom);
-                }  else {
-                    printError(line, "error find " + atom);
-                }
-                break;
-            }
-            default:
-                re_s[it++] = re.at(i);
-                break;
-            }
-        }
-
-        //cout << re_s << endl;
-
-        Re2NFA *pre2Nfa = new Re2NFA(re_s, func);
-        pre2Nfa->strToNFA();
-        re2NFAList.push_back(pre2Nfa);
-        /*
-        N2DFA *pN2DFA = new N2DFA(pre2Nfa);
-        pN2DFA->nfa2dfa();
-        n2DFAList.push_back(pN2DFA);
-        this->dfa2func.insert(std::make_pair(pN2DFA, func));
-        */
-    }
+    /**
+     * 辅助函数: 获取正则以及其对应的处理函数, 使用pair进行返回
+     * @brief getReAndFunc
+     * @param str
+     * @return
+     */
+    std::pair<string, string> getReAndFunc(string str);
 
     /**
      * 程序当前状态:
@@ -275,51 +204,16 @@ public:
         }
     }
 
+    //std::map<N2DFA*, string> dfa2func;
+    NFA2LIST nfa2List;
+
+    /**
+     * 合并后的NFA进行DFA的转换
+     * @brief nfa2DFA
+     */
     void nfa2DFA() {
         pN2DFA = new N2DFA(&nfa2List);
         pN2DFA->nfa2dfa();
-        //pN2DFA->printDFA();
-    }
-
-    NFA2LIST nfa2List;
-
-    std::pair<string, string> getReAndFunc(string str) {
-        string re;
-        string func;
-
-        string::iterator iter = str.end();
-        int stack = 1;
-        while(*iter != '}') {
-            iter --;
-        }
-        func.push_back('}');
-        iter --;
-        while (stack >= 1 && iter != str.begin()) {
-            if (*iter == '}') {
-                stack ++;
-            } else if (*iter == '{') {
-                stack --;
-            }
-            func.push_back(*iter);
-            iter --;
-        }
-
-        while(*iter == ' ') {
-            iter --;
-        }
-
-        re.push_back(*iter);
-        while(iter != str.begin()) {
-            iter --;
-            re.push_back(*iter);
-        }
-
-        std::reverse(func.begin(), func.end());
-        std::reverse(re.begin(), re.end());
-
-//            cout << re << "<---->" << func << endl << endl;
-
-        return std::make_pair(re, func);
     }
 
     void printWarnning(int line, string str) {
@@ -331,169 +225,19 @@ public:
         exit(1);
     }
 
-    void outCodeTop() {
-        std::ostream &o = (*out);
-        o<<"#include <stdio.h>"<<endl;
-        o<<"#include <stdlib.h>"<<endl;
-        o<<"#include <string.h>"<<endl;
-        o<<endl;
-        o<<"#define SYLEX_MAXSIZE_TEXT 120"<<endl;
-        o<<"#define SYLEX_MAXSIZE_BUFF 1024"<<endl;
-        o<<endl;
-        o<<"char SYLEX_FILE_NAME[100];"<<endl;
-        o<<"char SYLEX_OUT_FILE_NAME[100];"<<endl;
-        o<<"int SYLEX_LINE = 0;"<<endl;
-        o<<"int SYLEX_STATE = 0;"<<endl;
-        o<<"int SYLEX_TEXT_LEN = 0;"<<endl;
-        o<<"char SYLEX_TEXT[SYLEX_MAXSIZE_TEXT];"<<endl;
-        o<<"char SYLEX_BUFF[SYLEX_MAXSIZE_BUFF];"<<endl;
-        o<<endl;
-    }
+    void outCodeTop();
 
-    void outCodeMid() {
-        std::ostream &o = (*out);
+    void outCodeMid();
 
-        o<<"//扫描函数"<<endl;
-        o<<"void SYLEX_scanner(char *str)"<<endl;
-        o<<"{"<<endl;
-        o<<"    char ch = ' ';"<<endl;
-        o<<"    while(ch != '\\0')"<<endl;
-        o<<"    {"<<endl;
-        o<<"        //printf(\"%c %d\\n\", ch, SYLEX_STATE);"<<endl;
-        o<<"        switch(SYLEX_STATE) {"<<endl;
-
-        int state = 0;
-        DState *start = pN2DFA->dstart;
-        std::set<DState*> haveTravel;
-        std::map<DState*, int> state2id= pN2DFA->dState2id;
-        std::map<int, DState*> id2state = pN2DFA->id2dState;
-
-
-        int dfaNum = pN2DFA->dsCnt;
-
-        //o << dfaNum << endl;
-
-        for (int i = 0; i < dfaNum; ++i) {
-
-            DState* ds = id2state.at(i);
-            o << "        case " << i << ":"  << endl;
-            o << "        {" << endl;
-            o << "            ch = *str++;" << endl;
-            o << "            SYLEX_TEXT[SYLEX_TEXT_LEN++] = ch;" << endl;
-
-            //printf("case %d-> %p\n", i, ds);
-
-            bool hasPath = false;
-            bool isFirstIF = true;
-
-            for (auto path = ds->out.begin(); path != ds->out.end(); path++) {
-
-                hasPath = true;
-                DState *s = path->first;
-                int Key = path->second;
-                int toId = state2id.at(s);
-
-                bool isFun = false;
-                string chk_s;
-
-                if (ch2type.find(Key) != ch2type.end()) {
-                    isFun = true;
-                    chk_s = ch2type.at(Key);
-                    chk_s += "(ch)){";
-                } else {
-                    char p = Key;
-                    chk_s = "ch == \'";
-                    chk_s += p;
-                    chk_s += "\'){";
-                }
-
-                if (isFirstIF) {
-                    o << "            if(";
-                    isFirstIF = false;
-                } else {
-                    o << "            else if(";
-                }
-
-                o << chk_s << endl;
-
-                o << "                SYLEX_STATE = " << toId << ";" << endl;
-
-                o << "            }" << endl;
-
-                /*
-                if (ch2type.find(Key) != ch2type.end()) {
-                    cout << "from " << i << " -- " << ch2type.at(Key) << " -- " << toId << endl;
-                } else {
-                    cout << "from " << i << " -- " << (char)Key << " -- " << toId << endl;
-                }
-                */
-            }
-            if (hasPath) {
-                o << "               else";
-            }
-            o << " {" << endl;
-
-            if (ds->isEnd) {
-                o << "SYLEX_TEXT[SYLEX_TEXT_LEN-1] = '\\0';" << endl;
-                o << "SYLEX_TEXT_LEN = 0;" << endl;
-                o << "SYLEX_STATE = 0;" << endl;
-                o << "str --;" << endl;
-                o << "//---------------------" << endl;
-                o << ds->endFunc << endl;
-                o << "//---------------------" << endl;
-            } else {
-
-                o << "                printf(\"Error in line %d, in state " << i << " char is %c  \\n\", SYLEX_LINE, ch);" << endl;
-                o << "                exit(1);" << endl;
-            }
-
-            o << "            }" << endl;
-            o << "            break;" << endl;
-            o << "        }" << endl;
-            //o << "case over" << endl;
-        }
-
-        o << "       }" << endl;
-        o << "    }" << endl;
-        o << "}" << endl;
-    }
-
-    void outCodeBottom() {
-        std::ostream &o = (*out);
-        o<<"int main(int argc, char **args)"<<endl;
-        o<<"{"<<endl;
-        o<<"    if(argc == 1)"<<endl;
-        o<<"    {"<<endl;
-        o<<"        printf(\"没有输入源文件名\");"<<endl;
-        o<<"        return 0;"<<endl;
-        o<<"    }"<<endl;
-        o<<"    else if(argc == 2)"<<endl;
-        o<<"    {"<<endl;
-        o<<"        strcpy(SYLEX_FILE_NAME, args[1]);"<<endl;
-        o<<"        sprintf(SYLEX_OUT_FILE_NAME, \"%s.out\", SYLEX_FILE_NAME);"<<endl;
-        o<<"    }"<<endl;
-        o<<"    else"<<endl;
-        o<<"    {"<<endl;
-        o<<"        strcpy(SYLEX_FILE_NAME, args[1]);"<<endl;
-        o<<"        strcpy(SYLEX_OUT_FILE_NAME, args[2]);"<<endl;
-        o<<"    }"<<endl;
-        o<<"    FILE* file = fopen(SYLEX_FILE_NAME, \"r\");"<<endl;
-        o<<"    while(NULL != fgets(SYLEX_BUFF, SYLEX_MAXSIZE_BUFF, file))"<<endl;
-        o<<"    {"<<endl;
-        o<<"        ++SYLEX_LINE;"<<endl;
-        o<<"        SYLEX_scanner(SYLEX_BUFF);"<<endl;
-        o<<"    }"<<endl;
-        o<<"    return 0;"<<endl;
-        o<<"}"<<endl;
-    }
+    void outCodeBottom();
 
     void output() {
-        std::ostream &o = (*out);
+        //std::ostream &o = (*out);
+        //o << "hello world\n";
+        //o << "hello world\n";
         outCodeTop();
         outCodeMid();
         outCodeBottom();
-        //o << "hello world\n";
-        //o << "hello world\n";
     }
 
 };

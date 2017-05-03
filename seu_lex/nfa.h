@@ -113,15 +113,13 @@ public:
     }
 
 
-    char buf[1024] = {0};
-    char re[1024] = {0};
 private:
     State *post2nfa(char * postfix);
     void showNFA(State * start);
     char *re2post(char * re);
 
-    //string strExpress;
-    //int statusId;
+    char buf[1024] = {0};
+    char re[1024] = {0};
     string func;            // 该NFA所对应的终止状态的处理函数, 该NFA所对应的结局
     State * nfa_s = NULL;   // 保存解析后的数据
     State * nfa_e = NULL;   // 最终符合条件的状态

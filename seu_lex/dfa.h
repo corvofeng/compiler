@@ -30,12 +30,8 @@ public:
     std::map<DState*, int> dState2id;
     std::map<int, DState*> id2dState;
 
-    N2DFA(Re2NFA *re2NFA) {
-        this->nfa = re2NFA;
-    }
-
-    N2DFA(NFA2LIST *nfa2List) {
-        this->nfa = nfa2List;
+    N2DFA(NFA *nfa) {
+        this->nfa = nfa;
     }
 
     ~N2DFA() {

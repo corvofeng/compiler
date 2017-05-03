@@ -77,16 +77,14 @@ public:
     std::map<DState*, int> out;		// 记录DFA节点能够到达的状态以及路径
     std::set<State*> coreState;		// 当前状态所代表的NFA状态中的核心状态, 用于之后进行状态比较
     std::set<State*> allState;		// 记录所有可能状态, 在getAllState调用后被填充
-    bool isEnd = false;             // 是否为接受节点
     bool hasTravel = false;         // 构建DFA时, 表示该状态是否已经被遍历
-
+    bool isEnd = false;             // 是否为接受节点
     std::string endFunc;            // 结束状态中所对应的执行函数, 只有该节点为结束状态才可以操纵该对象
 
     /*
      * 此函数中的参数为DState类型, 是添加DFA的路径
      */
     DState& addDState(DState* pDs, int path) {
-
 //        printf("add DState %p with %c\n", pDs, path);
         this->out.insert(std::make_pair(pDs, path));
         return *this;
@@ -111,55 +109,14 @@ public:
     }
 
     /*
-     * 从核心点衍生到所有点
+     * 从核心点衍生到所有点, 此函数用于核心点到其周围点的映射
      */
-    void findSimple(State *start) {
-
-        if (start == NULL) {
-            return ;
-        }
-
-        if (this->allState.find(start) == this->allState.end()) {
-//          printf("add state %p\n", start);
-            this->allState.insert(start);
-        }
-
-        if (start->c == Match) {
-//          printf("add end state\n");
-            this->isEnd = true;
-            this->endFunc = start->endFunc; // 向该状态传递结束函数
-        } else if (start->c == Split) {
-            findSimple(start->out);
-            findSimple(start->out1);
-        } else if (start->c < 256) {
-            findSimple(start->out1);
-        } else {
-            printf("error in dfa\n");
-            exit(1);
-        }
-    }
+    void findSimple(State *start);
 
     /*
      * 通过核心状态的比对, 判断两个DState是否为相同的状态
      */
-    bool isSimilar(DState *newDs) {
-
-        if (this->coreState.size() != newDs->coreState.size()) {
-            return false;
-        }
-
-        for (auto pDs = coreState.begin(); pDs != coreState.end(); pDs++) {
-            if(newDs->coreState.find(*pDs) == newDs->coreState.end())
-                return false;
-        }
-
-        for (auto pDs = newDs->coreState.begin(); pDs != newDs->coreState.end(); ++pDs) {
-            if(this->coreState.find(*pDs) == this->coreState.end())
-                return false;
-        }
-
-        return true;
-    }
+    bool isSimilar(DState *newDs);
 
 };
 
