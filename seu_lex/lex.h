@@ -165,6 +165,7 @@ public:
 
     // 记录自定义的类型的符号, 以便进行转换 digit->a
     std::map<string, char> type2ch;
+    std::map<char, string> ch2type;
 
     void getFunc(string str, int line) {
 
@@ -177,7 +178,7 @@ public:
         str.erase(end_pos, str.end());
 
         // TODO为了避免重复, 此处需要修改为不存在的char值
-        static char ch = 'I';
+        static char ch = 20;
 
         string::iterator iter = str.begin();
         string left, right;
@@ -189,8 +190,9 @@ public:
 
         funcMap.insert(std::make_pair(left, right));
         type2ch.insert(std::make_pair(left, ch));
+        ch2type.insert(std::make_pair(ch, right));
 
-        cout << ch << " <-->" << left << "<-->"  << right  << endl;
+        //cout << (int)ch << " <-->" << left << "<-->"  << right  << endl;
         ch ++;
     }
 
@@ -220,7 +222,7 @@ public:
                 while (re.at(i) != '}') {i++;}
 
                 string atom = re.substr(start, i - start);
-                //                cout << start << " - " << i - 1 << "The atom is " << atom << endl;
+                // cout << start << " - " << i - 1 << "The atom is " << atom << endl;
                 if (type2ch.find(atom) != type2ch.end()) {
                     re_s[it++] = type2ch.at(atom);
                 }  else {
@@ -233,6 +235,7 @@ public:
                 break;
             }
         }
+
         //cout << re_s << endl;
 
         Re2NFA *pre2Nfa = new Re2NFA(re_s, func);
@@ -266,7 +269,7 @@ public:
      * 题只能通过使用多余空间进行解决. 此种方法有利有弊, 但不是权宜之计, 是解决之道.
      */
     void dfaMerge() {
-        for (int i = 1; i < re2NFAList.size(); ++i) {
+        for (int i = 0; i < re2NFAList.size(); ++i) {
             Re2NFA* nfa = re2NFAList.at(i);
             nfa2List.merge(nfa);
         }
@@ -275,7 +278,7 @@ public:
     void nfa2DFA() {
         pN2DFA = new N2DFA(&nfa2List);
         pN2DFA->nfa2dfa();
-        pN2DFA->printDFA();
+        //pN2DFA->printDFA();
     }
 
     NFA2LIST nfa2List;
@@ -314,7 +317,7 @@ public:
         std::reverse(func.begin(), func.end());
         std::reverse(re.begin(), re.end());
 
-        //    cout << re << "<---->" << func << endl << endl;
+//            cout << re << "<---->" << func << endl << endl;
 
         return std::make_pair(re, func);
     }
@@ -350,14 +353,14 @@ public:
     void outCodeMid() {
         std::ostream &o = (*out);
 
-        cout<<"//扫描函数"<<endl;
-        cout<<"void SYLEX_scanner(char *str)"<<endl;
-        cout<<"{"<<endl;
-        cout<<"    char ch = ' ';"<<endl;
-        cout<<"    while(ch != '\\0')"<<endl;
-        cout<<"    {"<<endl;
-        cout<<"        //printf(\"%c %d\\n\", ch, SYLEX_STATE);"<<endl;
-        cout<<"        switch(SYLEX_STATE) {"<<endl;
+        o<<"//扫描函数"<<endl;
+        o<<"void SYLEX_scanner(char *str)"<<endl;
+        o<<"{"<<endl;
+        o<<"    char ch = ' ';"<<endl;
+        o<<"    while(ch != '\\0')"<<endl;
+        o<<"    {"<<endl;
+        o<<"        //printf(\"%c %d\\n\", ch, SYLEX_STATE);"<<endl;
+        o<<"        switch(SYLEX_STATE) {"<<endl;
 
         int state = 0;
         DState *start = pN2DFA->dstart;
@@ -368,24 +371,91 @@ public:
 
         int dfaNum = pN2DFA->dsCnt;
 
-        cout << dfaNum << endl;
+        //o << dfaNum << endl;
 
         for (int i = 0; i < dfaNum; ++i) {
 
             DState* ds = id2state.at(i);
-            cout << "case " << i << endl;
+            o << "        case " << i << ":"  << endl;
+            o << "        {" << endl;
+            o << "            ch = *str++;" << endl;
+            o << "            SYLEX_TEXT[SYLEX_TEXT_LEN++] = ch;" << endl;
+
             //printf("case %d-> %p\n", i, ds);
 
+            bool hasPath = false;
+            bool isFirstIF = true;
+
             for (auto path = ds->out.begin(); path != ds->out.end(); path++) {
+
+                hasPath = true;
                 DState *s = path->first;
                 int Key = path->second;
-                int toId = path->first;
+                int toId = state2id.at(s);
 
-                cout << "from " << i << " -- " << toId << " -- " << toId << endl;
+                bool isFun = false;
+                string chk_s;
+
+                if (ch2type.find(Key) != ch2type.end()) {
+                    isFun = true;
+                    chk_s = ch2type.at(Key);
+                    chk_s += "(ch)){";
+                } else {
+                    char p = Key;
+                    chk_s = "ch == \'";
+                    chk_s += p;
+                    chk_s += "\'){";
+                }
+
+                if (isFirstIF) {
+                    o << "            if(";
+                    isFirstIF = false;
+                } else {
+                    o << "            else if(";
+                }
+
+                o << chk_s << endl;
+
+                o << "                SYLEX_STATE = " << toId << ";" << endl;
+
+                o << "            }" << endl;
+
+                /*
+                if (ch2type.find(Key) != ch2type.end()) {
+                    cout << "from " << i << " -- " << ch2type.at(Key) << " -- " << toId << endl;
+                } else {
+                    cout << "from " << i << " -- " << (char)Key << " -- " << toId << endl;
+                }
+                */
             }
-            cout << "case over" << endl;
+            if (hasPath) {
+                o << "               else";
+            }
+            o << " {" << endl;
 
+            if (ds->isEnd) {
+                o << "SYLEX_TEXT[SYLEX_TEXT_LEN-1] = '\\0';" << endl;
+                o << "SYLEX_TEXT_LEN = 0;" << endl;
+                o << "SYLEX_STATE = 0;" << endl;
+                o << "str --;" << endl;
+                o << "//---------------------" << endl;
+                o << ds->endFunc << endl;
+                o << "//---------------------" << endl;
+            } else {
+
+                o << "                printf(\"Error in line %d, in state " << i << " char is %c  \\n\", SYLEX_LINE, ch);" << endl;
+                o << "                exit(1);" << endl;
+            }
+
+            o << "            }" << endl;
+            o << "            break;" << endl;
+            o << "        }" << endl;
+            //o << "case over" << endl;
         }
+
+        o << "       }" << endl;
+        o << "    }" << endl;
+        o << "}" << endl;
     }
 
     void outCodeBottom() {

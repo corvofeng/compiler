@@ -16,7 +16,7 @@
  *   连接符, 对于两个Frag片段, 如果有连接符存在, 则进行连接操作
  * 对于正则表达式来说, 需要选择一个不会被用到的字符
  */
-#define LINK 27
+#define LINK 01
 
 /**
  * 此段代码来源:
@@ -55,7 +55,7 @@ char *Re2NFA::re2post(char *re)
     nalt = 0;
     natom = 0;
 
-    if(strlen(re) >= sizeof buf / 2)
+    if(strlen(re) >= sizeof(buf) / 2)
     {
         return NULL;
     }
@@ -225,8 +225,16 @@ State *Re2NFA::post2nfa(char *postfix)
 
         case '?':
             e = pop();
-            e.start->out1 = e.end;
-            push(Frag(e.start, e.end));
+            end = new State(Match, NULL, NULL);
+            start = new State(Split, e.start, end);
+            if (e.end->c == Split) {
+                e.end->out1 = end;
+            } else {
+                e.end->c = Split;
+                e.end->out = end;
+            }
+
+            push(Frag(start, end));
             break;
 
         case '|':
@@ -261,13 +269,14 @@ State *Re2NFA::post2nfa(char *postfix)
             push(Frag(start, end));
             break;
 
-        case '\\':
-            *p ++;
+        case '\\': {
+            p++;
             end = new State(Match, NULL, NULL);
             start = new State(*p, end, NULL);
             char_set.insert(*p);
             push(Frag(start, end));
             break;
+        }
 
         default:
             end = new State(Match, NULL, NULL);
@@ -339,7 +348,11 @@ void Re2NFA::showNFA(State *start)
             printf("%d -> %c -> %d\n",
                    state2id.at(start), start->c, state2id.at(start->out));
         } else {
-            printf("%d -> [] -> %d\n", state2id.at(start), state2id.at(start->out));
+            if (start->out->c == Match) {
+                printf("%d -> [] -> [%d]\n", state2id.at(start), state2id.at(start->out));
+            } else {
+                printf("%d -> [] -> %d\n", state2id.at(start), state2id.at(start->out));
+            }
         }
         showNFA(start->out);
     }

@@ -161,8 +161,8 @@ DState* N2DFA::nfa2dfa(NFA *nfa) {
                 tmpDs->getAllState();
                 pDs->addDState(tmpDs, *pChar);
                 dsList.push_back(tmpDs);
-                this->dState2id.insert(std::make_pair(ds, this->dsCnt));
-                this->id2dState.insert(std::make_pair(this->dsCnt, ds));
+                this->dState2id.insert(std::make_pair(tmpDs, this->dsCnt));
+                this->id2dState.insert(std::make_pair(this->dsCnt, tmpDs));
                 this->dsCnt ++;
             }
 

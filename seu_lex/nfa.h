@@ -113,6 +113,8 @@ public:
     }
 
 
+    char buf[1024] = {0};
+    char re[1024] = {0};
 private:
     State *post2nfa(char * postfix);
     void showNFA(State * start);
@@ -125,8 +127,6 @@ private:
     State * nfa_e = NULL;   // 最终符合条件的状态
     std::set<int> char_set; // 输入符号集合
 
-    char buf[1024] = {0};
-    char re[1024] = {0};
 
     int id = 0;
     std::set<State *> haveTravel;
@@ -158,11 +158,14 @@ public:
 
     /**
      * 合并操作, 主要用来合并NFA, 合并时, 新建一个新的起始节点, 再将两个NFA的字符集进行合并,
-     * @brief merge
-     * @param re2NFA
-     * @return
      */
     NFA2LIST* merge(Re2NFA *re2NFA) {
+        /*
+        if (nfa_s == NULL) {
+            nfa_s = re2NFA->getStart();
+            return this;
+        }
+        */
         State *create = new State(Split, re2NFA->getStart(), nfa_s);
         std::set<int> char_set1 = re2NFA->getCharSet();
 

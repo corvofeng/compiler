@@ -78,22 +78,30 @@ void test()
      * "(\\+|-|$)LL*(\\.LL*|$)((E|e)LL*|$)";
      * |M|N
      * (*(=|$))|(/(=|$))|(+(+|=|$))|(-(-|=|$))|(<(<|=|$))|(>(>|=|$))|(=(=|$))|(&(&|=|$))|(|(||=|$))|(^(=|$))|(~(=|$))
+     * (\*(=|\$))|(/(=|\$))|(\+(\+|=|\$))|(-(-|=|\$))|(<(<|=|\$))|(>(>|=|\$))|(=(=|\$))|(&(&|=|\$))|(\|(\||=|\$))|(^(=|\$))|(~(=|\$))
      * (OI*O)|(PJ*P)
      * #include( )*((<(K|_)(K|_|L)*.h>)|("(K|_)(K|_|L)*.h"))
 
+     */
 
+    /*
     //char *str =
-    char *str = "\\(|\\)|\\{|\\}|\\[|\\]|;|,|.";
+    char *str = "\\+(\\+|=)?";
+    //char *str = "(\\+|=)?";
+    //char *str = "\\+|=";
     //char *str = "\\(|\\)";
     Re2NFA *pRe2NFA = new Re2NFA(str);
+    cout << pRe2NFA->re << endl;
     pRe2NFA->strToNFA();
+    pRe2NFA->printNFA();
+    cout << pRe2NFA->buf << endl;
 
     N2DFA n2DFA(pRe2NFA);
     n2DFA.nfa2dfa();
     n2DFA.printDFA();
 
     delete pRe2NFA;
-     */
+    */
 
     Lex lex("../input/require.l", "../input/out.c");
     lex.scaner();

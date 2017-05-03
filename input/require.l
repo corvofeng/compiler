@@ -55,7 +55,13 @@ int isNoTow(char ch)
 
 int isTab(char ch)
 {
-    if(ch == '\t' && ch == '\n')
+    if(ch == '\t')
+        return 1;
+    return 0;
+}
+int isNextLine(char ch)
+{
+    if(ch == '\n')
         return 1;
     return 0;
 }
@@ -82,7 +88,7 @@ notow=isNoTow
 letter=isLetter
 digit=isDigit
 \t=isTab
-\n=isTab
+\n=isNextLine
 \'=isSingleQuote
 \"=isDoubleQuote
 %!
@@ -97,8 +103,9 @@ digit=isDigit
         printf("<$ID,%s>\n", SYLEX_TEXT);
     }
 }
+//[\+\-]?[\d]+([\.][\d]*)?([Ee][+-]?[\d]+)?
 %$
-(%+|-|%$){digit}{digit}*(.{digit}{digit}*|%$)((E|e){digit}{digit}*|%$) {
+(%+|-)?{digit}+(%.{digit}*)?((E|e)(%+|-)?{digit}+)? {
     printf("<$NUM,%s>\n", SYLEX_TEXT);
 }
 %$
@@ -110,15 +117,15 @@ digit=isDigit
 
 }
 %$
-(%*(%=|%$))|(/(=|%$))|(%+(%+|=|%$))|(-(-|=|%$))|(<(<|=|%$))|(>(>|=|%$))|(=(=|%$))|(&(&|=|%$))|(%|(%||=|%$))|(^(=|%$))|(~(=|%$)) {
+(%*=?)|(/=?)|(%+(%+|=)?)|(-(-|=)?)|(<(<|=)?)|(>(>|=))|(==?)|(&(&|=))|(%|(%||=))|(^=?)|(~=?) {
     printf("<%s,->\n", SYLEX_TEXT);
 }
 %$
-({\'}{noone}*{\'})|({\"}{notow}*{\"}) { 
-	printf("<$STR,%s>\n", SYLEX_TEXT);
+({\'}{noone}*{\'})|({\"}{notow}*{\"}) {
+    printf("<$STR,%s>\n", SYLEX_TEXT);
 }
 %$
 #include(% )*((<({letter}|_)({letter}|_|{digit})*.h>)|("({letter}|_)({letter}|_|{digit})*.h")) {
-    printf("%s 应该预处理的，暂时先忽略", SYLEX_TEXT);
+    printf("%s  //应该预处理的，暂时先忽略\n", SYLEX_TEXT);
 }
 %%
