@@ -20,6 +20,8 @@ using std::map;
 using std::cout;
 using std::endl;
 using std::vector;
+using std::string;
+using std::set;
 
 /**
  * 该类保存语法, 例如
@@ -31,15 +33,38 @@ class Grammar
 {
 public:
     vector<Expression*> pExprVec;
-
     map<string, Expression*> left2Expr;
-
     map<string, set<char>> first;
+    string nonTermHead;        // 获得非终结符的头结点
 
-    // 记录含epsilon的产生式
-    set<string> haveEpsilon;
 
     Grammar() {}
+    Grammar(string* expr, int size, string nonTermHead) {
+        for (int i = 0; i < size; ++i) {
+            // 消除空格
+            expr[i].erase(std::remove_if(expr[i].begin(), expr[i].end(),
+                                    [](char c){return (c == '\r' || c == '\t' || c == ' ');}),
+                                    expr[i].end());
+        //    std::cout << expr[i] << std::endl;
+        }
+
+        for (int i = 0; i < size; ++i) {
+            std::string s = expr[i];
+            int j, len = s.size();
+            for (j = 0; j < len; ++j) {
+                if (s[j] == '-') break;
+            }
+            string left = s.substr(0, j);
+            j += 2;
+            string right = s.substr(j, len - j);
+            this->insert(left, right);
+        }
+        this->nonTermHead = nonTermHead;
+    }
+
+    string getNonTermHead() {
+        return this->nonTermHead;
+    }
 
     ~Grammar() {
         for (auto it = left2Expr.begin(); it != left2Expr.end(); it++) {
@@ -53,13 +78,6 @@ public:
             Expression *expr = (*it).second;
             expr->printExpr();
         }
-
-        /*
-        std::cout << "Below has epsilon" << std::endl;
-        for (auto it: this->haveEpsilon) {
-            std::cout << it << std::endl;
-        }
-        */
     }
 
     /**
@@ -98,6 +116,7 @@ public:
      */
     void dfs(Expression* pExpr) {
         if (isOver.at(pExpr) == true) {
+            //cout << pExpr->left << "  ok" << endl;
             return;
         }
         isOver[pExpr] = true;
@@ -157,15 +176,11 @@ public:
     map<Expression*, bool> isOver;
 
     void makeFirst() {
-        int size = left2Expr.size();
-
         // 此处虽为循环调用, 但实际上执行时, 很多情况会直接返回, 复杂度并不很高
         for (auto it : pExprVec) {
             Expression *pExpr = it;
             dfs(pExpr);
         }
-
-        printFirst();
     }
 
 

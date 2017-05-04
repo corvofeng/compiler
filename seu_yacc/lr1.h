@@ -14,11 +14,53 @@
 #define LR1_H_
 
 #include "grammar.h"
+#include "expression.h"
+#include "lrstate.h"
+
+using std::vector;
 
 class LR1
 {
 public:
+    Grammar *grammar = NULL;
+    LRState* lrStateStandard = NULL;
+    vector<LRState*> lrStateVec;
+
     LR1() {}
+    LR1(string* expr, int size, string nonTermHead) {
+        this->grammar = new Grammar(expr, size, nonTermHead);
+        this->grammar->makeFirst();
+        this->grammar->printFirst();
+
+        lrStateStandard = LRState::getStandardState(this->grammar);
+    }
+
+
+    void iterms() {
+        LRState *start = new LRState();
+        set<char> terms;
+        terms.insert('$');
+        string left = "#";
+        string right = this->grammar->getNonTermHead();
+        start->addCoreExpr(left, right, terms);
+        start->findAllExpr();
+
+
+    }
+
+
+
+    ~LR1() {
+
+
+        LRState::deleteStandardState();
+        if (grammar) {
+            delete grammar;
+        }
+    }
+
+
+
 };
 
 

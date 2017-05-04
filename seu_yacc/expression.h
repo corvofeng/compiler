@@ -15,9 +15,15 @@
 #include <set>
 #include <string>
 #include <stdio.h>
+#include <vector>
+//#include "grammar.h"
+
+//class Grammar;
 
 using std::string;
 using std::set;
+using std::cout;
+using std::endl;
 
 /**
  * 保存单个表达式, 例如
@@ -54,21 +60,33 @@ public:
 
 };
 
-class Symbol {
+// 单个表达式
+class SingleExpress
+{
 public:
-    Symbol(){}
+    string left;
+    string right;
+    int pos = 0;
+    set<char> term;
+    SingleExpress() {}
 
-    Symbol(string s) {
-        this->data = s;
-    }
-
-    bool isTerminal() {}
-
-    bool equal(Symbol &s) {
+    SingleExpress(string left, string right) {
 
     }
 
-    string data;
+    SingleExpress(string &left, string &right, set<char>& term) {
+        this->left = left;
+        this->right = right;
+        this->term = term;
+    }
+
+    void printSigleExpr() {
+        cout << left << " -> " << right.substr(0, pos) << '.' << right.substr(pos) << endl;
+    }
 };
+
+using std::vector;
+
+
 
 #endif
