@@ -30,8 +30,8 @@ public:
     string left;
     set<string> right;
 
-    Expression(string s) {
-        left = s;
+    Expression(string left) {
+        this->left = left;
     }
 
     void printExpr() {
@@ -52,6 +52,23 @@ public:
         right.insert(s);
     }
 
+};
+
+class Symbol {
+public:
+    Symbol(){}
+
+    Symbol(string s) {
+        this->data = s;
+    }
+
+    bool isTerminal() {}
+
+    bool equal(Symbol &s) {
+
+    }
+
+    string data;
 };
 
 #endif

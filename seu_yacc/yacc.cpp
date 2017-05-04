@@ -44,11 +44,11 @@ void yacc_test()
         expr[i].erase(std::remove_if(expr[i].begin(), expr[i].end(),
                                 [](char c){return (c == '\r' || c == '\t' || c == ' ');}),
                                 expr[i].end());
-        //std::cout << expr[i] << std::endl;
+        std::cout << expr[i] << std::endl;
     }
 
 
-    Grammar grammer;
+    Grammar grammar;
     for (int i = 0; i < 8; ++i) {
       //  printf("%s\n", expr[i]);
         std::string s = expr[i];
@@ -67,10 +67,11 @@ void yacc_test()
         express.printExpr();
         exit(1);
         */
-        grammer.insert(left, right);
+        grammar.insert(left, right);
         //cout << left << " -> " << right << endl;
     }
-    grammer.printGram();
+    grammar.printGram();
+    grammar.makeFirst();
 
 //    printf("%d\n", sizeof(expr));
 

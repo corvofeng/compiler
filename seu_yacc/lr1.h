@@ -13,6 +13,13 @@
 #ifndef LR1_H_
 #define LR1_H_
 
+#include "grammar.h"
+
+class LR1
+{
+public:
+    LR1() {}
+};
 
 
 #endif
