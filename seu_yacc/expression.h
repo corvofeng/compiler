@@ -71,14 +71,29 @@ public:
 
     SingleExpress() {}
 
-    SingleExpress(string left, string right) {
-
+    SingleExpress(string left, string right, int pos, char term) {
+        this->left = left;
+        this->right = right;
+        this->term = term;
+        this->pos = pos;
     }
 
     SingleExpress(string &left, string &right, char term) {
         this->left = left;
         this->right = right;
         this->term = term;
+    }
+
+    bool isEqual(SingleExpress *tmpExpr) {
+
+        if (this->left == tmpExpr->left &&
+                this->right == tmpExpr->right &&
+                this->term == tmpExpr->term &&
+                this->pos == tmpExpr->pos) {
+
+            return true;
+        }
+        return false;
     }
 
     void printSigleExpr() {

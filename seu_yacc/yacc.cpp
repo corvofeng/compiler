@@ -73,6 +73,8 @@ void yacc_test()
     LR1 lr1(expr1, 3, "S");
     lr1.iterms();
 
+    lr1.printLR1();
+
     //Grammar grammar(expr, 8, "E");
     /*
     Grammar grammar(expr1, 3, "S");

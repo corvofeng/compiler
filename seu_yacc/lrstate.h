@@ -21,6 +21,9 @@ public:
     static map<string, set<char>> first;
     static LRState* lrStateStandard;
 
+    std::map<char, LRState*> out;
+    std::set<char> maybeNext;
+
     LRState(){}
 
     ~LRState() {
@@ -62,12 +65,14 @@ public:
         lrStateStandard = NULL;
     }
 
+
+
     void findAllExpr() {
         if (!lrStateStandard) {
             cout << "Please create standard list!!!" << endl;
             exit(1);
         }
-        cout << "find all expr" << endl;
+        //cout << "find all expr" << endl;
 
         auto it = this->singleExprVec.begin();
 
@@ -79,28 +84,30 @@ public:
             char ch = sExpr->right[pos];
             char term = sExpr->term;
 
+            if (pos >= right.size()) { // 如果当前位置已经处于末尾, 则不进行处理
+                i++;
+                continue;
+            }
 
-
-            string Beta = right;
-
+            string Beta = right.substr(pos);
             Beta += term;
-            cout << "The Beta is " << Beta << endl;
+            //cout << "The Beta is " << Beta << "  pos is " << pos << endl;
             increaseState(Beta);
             i++;
         }
-
-        printAllExpr();
     }
 
     /**
      * 通过Bterm来增加表达式向量的个数, 例如
-     * S-> .ABC, $
      *
-     * 将会输入 BC$
+     * S-> .A, $ (输入为A$)
+     * 直接将A -> .<产生式>, $      添加到向量组中
      *
-     * 此时, 会进行查找
+     * S-> .ABC, $ (输入为ABC$)
+     * 将A -> .<产生式>, FIRST{B}  添加到向量组中
      *
-     *
+     * S-> .Abc, $ (输入为Abc$)
+     * 将 A -> .<产生式>, b        添加到向量组中
      *
      * @brief increaseState
      * @param s
@@ -108,10 +115,14 @@ public:
      */
     void increaseState(string &s) {
 
+        //cout << "The s is " << s << endl;
+        if (s.size() < 2) {
+            return;
+        }
+
         if(s.size() == 2) {
             string left = s.substr(0, 1);
             char term = s[1];
-            cout << "The size is 2 left is " << left << " term is "<< term << endl;
             findAndPush(left, term);
             return;
         }
@@ -125,22 +136,33 @@ public:
             if (isupper(ch)) { // 非终结符
                 string s;
                 s = ch;
-
+                for (auto term : first.at(s)) {
+                    findAndPush(left, term);
+                }
             } else {        // ch为终结符
-                cout << "The char is " << ch << endl;
+                //cout << "The char is " << ch << endl;
                 findAndPush(left, ch);
-                break;
             }
+            break;
         }
     }
 
+    /**
+     * 从标准的表达式中添加左值为left的表达式, 同时将其终止符置为term
+     *
+     * 此函数能够防止重复添加
+     *
+     * @brief findAndPush
+     * @param left
+     * @param term
+     */
     void findAndPush(string& left, char term) {
         for (auto state: lrStateStandard->coreExpr) {
             SingleExpress *standardState = state;
             if(standardState->left == left) {
                 SingleExpress* newSExpr =
                         new SingleExpress(left, standardState->right, term);
-
+                this->maybeNext.insert(standardState->right[0]);
                 if(isExists(newSExpr)) {
                     delete newSExpr;
                     continue;
@@ -150,73 +172,56 @@ public:
         }
     }
 
+    bool isEqual(LRState* tmpLRState) {
+        vector<SingleExpress*>& coreExprVecTmp = tmpLRState->coreExpr;
+        if (this->coreExpr.size() != coreExprVecTmp.size()) {
+            return false;
+        }
+        for (auto it : coreExprVecTmp){
+            SingleExpress *tmpExpr = it;
+            bool exist = false;
+            for(SingleExpress *oriExpr : this->coreExpr) {
+                if (oriExpr->isEqual(tmpExpr)) {
+                    exist = true;
+                }
+            }
+
+            if (!exist) {
+                return false;
+            }
+        }
+
+        for (SingleExpress *oriExpr : this->coreExpr) {
+
+            bool exist = false;
+            for (SingleExpress* tmpExpr : coreExprVecTmp) {
+                if (tmpExpr->isEqual(oriExpr)) {
+                    exist = true;
+                }
+            }
+
+            if (!exist) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     /*
      * 判断该表达式是否已经存在于向量中,
-     * 如果向量存在, 则返回原始地址,
+     * 如果向量存在, 则返回已经存在状态的原始地址,
      * 否则, 返回NULL
      */
-    SingleExpress* isExists(SingleExpress* sExpr) {
+    SingleExpress* isExists(SingleExpress* sExprTmp) {
         for (auto it : this->singleExprVec){
-            SingleExpress* sExprTmp = it;
-            if (sExpr->left == sExprTmp->left
-                    && sExpr->right == sExprTmp->right
-                    && sExpr->term == sExprTmp->term) {
+            SingleExpress* sExpr = it;
+            if (sExpr->isEqual(sExprTmp)) {
                 return sExpr;
             }
         }
         return NULL;
     }
-
-    /**
-     * 获取First(B)的终结符号集合
-     * @brief getFirst
-     * @param s
-     * @return
-     */
-    void getFirst(string& s, char oldTerm) {
-        if (first.empty()) {
-            cout << "Please create standard first set" << endl;
-            exit(1);
-        }
-
-        cout << s << " " << oldTerm << endl;
-        set<char> termSet;
-        bool hasExp = true;
-        for (auto ch : s) {
-            hasExp = false;
-            if (std::isupper(ch)) {
-
-                string s;
-                s += ch;
-                for (auto state: lrStateStandard->coreExpr) {
-                    SingleExpress *standardState = state;
-                    if(standardState->left == s) {
-
-                    }
-                }
-            /*
-                set<char>& tmpSet = this->first.at(ch);
-                termSet.insert(tmpSet.begin(), tmpSet.end());
-                if (tmpSet.find('~') != tmpSet.end()) {
-                    continue;
-                    hasExp = true;
-                } else {
-                    break;
-                }
-            */
-            } else {     // 非大写字母, 终结符直接插入
-                termSet.insert(ch);
-                break;
-            }
-        }
-
-        if (hasExp) {
-            //termSet.insert(oldTerm.begin(), oldTerm.end());
-        }
-
-        //return termSet;
-    }
-
 
     /**
      * 打印所有的表达式, 包括此个状态中的所有表达式以及终止符
@@ -229,14 +234,22 @@ public:
         }
     }
 
-    LRState* alreadyHave(LRState *lsTest) {
-
-    }
 
     void addCoreExpr(string &left, string &right, char term) {
         SingleExpress* singleExpress = new SingleExpress(left, right, term);
         this->coreExpr.push_back(singleExpress);
         this->singleExprVec.push_back(singleExpress);
+        this->maybeNext.insert(right.at(0));
+    }
+
+    void addCoreExpr(string &left, string &right, int pos, char term) {
+        SingleExpress* singleExpress = new SingleExpress(left, right, pos, term);
+        this->coreExpr.push_back(singleExpress);
+        this->singleExprVec.push_back(singleExpress);
+
+        if (pos < right.size()) {
+            this->maybeNext.insert(right.at(pos));
+        }
     }
 
     void addExpr(Expression& expr) {
