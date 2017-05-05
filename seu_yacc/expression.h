@@ -67,21 +67,31 @@ public:
     string left;
     string right;
     int pos = 0;
-    set<char> term;
+    char term;
+
     SingleExpress() {}
 
     SingleExpress(string left, string right) {
 
     }
 
-    SingleExpress(string &left, string &right, set<char>& term) {
+    SingleExpress(string &left, string &right, char term) {
         this->left = left;
         this->right = right;
         this->term = term;
     }
 
     void printSigleExpr() {
-        cout << left << " -> " << right.substr(0, pos) << '.' << right.substr(pos) << endl;
+        cout << left << " -> " << right.substr(0, pos) << '.' << right.substr(pos) << "    ";
+
+        cout << "term char: " << term;
+
+        /*
+        for (auto ch : term) {
+            cout << ch << " ";
+        }
+        */
+        cout << endl;
     }
 };
 

@@ -60,6 +60,15 @@ void yacc_test()
         "C -> d"
     };
 
+    string expr2[6] = {
+        "S->S;A",
+        "S->A",
+        "A -> E",
+        "A->i=E",
+        "E->E+i",
+        "E->i"
+    };
+
 
     LR1 lr1(expr1, 3, "S");
     lr1.iterms();

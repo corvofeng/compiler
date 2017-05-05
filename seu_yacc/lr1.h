@@ -38,20 +38,22 @@ public:
 
     void iterms() {
         LRState *start = new LRState();
-        set<char> terms;
-        terms.insert('$');
+        char term = ('$');
         string left = "#";
         string right = this->grammar->getNonTermHead();
-        start->addCoreExpr(left, right, terms);
+        start->addCoreExpr(left, right, term);
         start->findAllExpr();
 
-
+        lrStateVec.push_back(start);
     }
 
 
 
     ~LR1() {
-
+        for(auto it : lrStateVec) {
+            delete it;
+        }
+        lrStateVec.clear();
 
         LRState::deleteStandardState();
         if (grammar) {
