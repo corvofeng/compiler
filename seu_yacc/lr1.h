@@ -172,13 +172,13 @@ public:
         // 初始化二维数组
         int nonTermSize = nonTerm.size();
         for (int i = 0; i < id; ++i) {
-            res_action[i].resize(nonTermSize);
+            res_action[i].resize(termId);
         }
 
         // 初始化二维数组
         int termSize = term.size();
         for (int i = 0; i < id; ++i) {
-            res_goto[i].resize(termSize);
+            res_goto[i].resize(nonTermId);
         }
 
         //string test = "$";
@@ -186,14 +186,26 @@ public:
         this->haveTravel.clear();
         actionHelp(this->lrStateVec.at(0), res_action, term);
 
+        this->printLR1();
+        this->printGrammar();
         for (int i = 0; i < id; ++i) {
-            for (int j = 0; j < termId - 1; ++j) {
+            for (int j = 0; j < termId; ++j) {
                 cout << "\t*" << res_action[i][j] << "*\t";
             }
             cout << endl;
         }
     }
 
+
+    void printGrammar() {
+        LRState* standard = LRState::lrStateStandard;
+        int size = standard->coreExpr.size();
+        for (int i = 0; i < size; ++i) {
+            cout << i << ": " ;
+            SingleExpress *sTmp = standard->coreExpr.at(i);
+            sTmp->printSigleExpr();
+        }
+    }
 
 
     void actionHelp(LRState *start, vector<vector<string>> &res_action, map<string, int>& term) {
@@ -203,16 +215,19 @@ public:
         haveTravel.insert(start);
         std::map<char, LRState*>& lrVec = start->out;
 
-        if (start->acc == 0) {
+        /*
+         * 当前状态如果为终止状态
+         */
+        if (start->acc == -1) {
             int col = state2id.at(start);
             int row = term.at("$");
             res_action[col][row] = "acc";
-        } else if (start->acc > 0) {
+        } else if (start->acc >= 0) {
             int col = state2id.at(start);
             int reduceR = start->acc;
             for (auto it: start->coreExpr) {
                 SingleExpress *sExpr = it;
-                if (sExpr->pos > sExpr->right.size()) {
+                if (sExpr->pos >= sExpr->right.size()) {
                     string t;
                     t += sExpr->term;
                     int row = term.at(t);
@@ -237,7 +252,7 @@ public:
 
 
 //            cout << state2id.at(start) << "<- " << ch << " ->" << state2id.at(tmpLR) << endl;;
-            this->showLR1(tmpLR);
+            this->actionHelp(tmpLR, res_action, term);
         }
     }
 

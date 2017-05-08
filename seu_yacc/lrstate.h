@@ -26,12 +26,12 @@ public:
     std::set<char> maybeNext;
 
     /**
-     * acc = -1; 表示该状态属于中间状态, 只能进行移入
-     * acc = 0; 表明该状态为可以接受, 即为完成
-     * acc > 0 表示使用第acc个数字的产生式可以将进行规约
+     * acc = -2; 表示该状态属于中间状态, 只能进行移入
+     * acc = -1; 表明该状态为可以接受, 即为完成
+     * acc >= 0; 表示使用第acc个数字的产生式可以将进行规约
      *
      */
-    int acc = -1;
+    int acc = -2;
 
     LRState(){}
 
@@ -105,7 +105,8 @@ public:
                 i++;
 
                 if (right.at(pos-1) == nonTermHead.at(0)) {
-                    this->acc = 0;
+                    cout << right.at(pos - 1) << endl;
+                    this->acc = -1;
                 } else {
                     this->acc = this->findExprByLeftRight(sExpr->left, right);
          //           cout << "the acc is " << this->acc << endl;

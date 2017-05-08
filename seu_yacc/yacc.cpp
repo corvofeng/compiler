@@ -73,7 +73,7 @@ void yacc_test()
     LR1 lr1(expr1, 3, "S");
     lr1.iterms();
 
-    lr1.printLR1();
+    //lr1.printLR1();
     lr1.makeACTION();
     lr1.makeGOTO();
 
