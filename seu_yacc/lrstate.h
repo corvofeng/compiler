@@ -32,8 +32,7 @@ public:
         }
     }
 
-    vector<SingleExpress*> singleExprVec;
-
+    vector<SingleExpress*> singleExprVec;   // 存储所有的产生式
     vector<SingleExpress*> coreExpr;        // 核心的expr
 
     /**

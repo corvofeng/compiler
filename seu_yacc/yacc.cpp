@@ -74,6 +74,8 @@ void yacc_test()
     lr1.iterms();
 
     lr1.printLR1();
+    lr1.makeACTION();
+    lr1.makeGOTO();
 
     //Grammar grammar(expr, 8, "E");
     /*

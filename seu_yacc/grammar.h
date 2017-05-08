@@ -35,7 +35,9 @@ public:
     vector<Expression*> pExprVec;
     map<string, Expression*> left2Expr;
     map<string, set<char>> first;
-    string nonTermHead;        // 获得非终结符的头结点
+    string nonTermHead;        // 获得非终结符的首结点
+    set<string> term;            // 保存终结符的集合a, b, +, i ...
+    set<string> nonTerm;         // 保存非终结符的集合(一定为大写字母) S, A, B ..
 
 
     Grammar() {}
@@ -55,8 +57,18 @@ public:
                 if (s[j] == '-') break;
             }
             string left = s.substr(0, j);
+            this->nonTerm.insert(left);
             j += 2;
             string right = s.substr(j, len - j);
+            for (auto it: right) {
+                string s;
+                s += it;
+                if (isupper(it)) {
+                    this->nonTerm.insert(s);
+                } else {
+                    this->term.insert(s);
+                }
+            }
             this->insert(left, right);
         }
         this->nonTermHead = nonTermHead;
@@ -126,11 +138,11 @@ public:
             string& rth = rh;
 
             for (int i = 0; i < rth.length(); ++i) {
-                if (! std::isupper(rth.at(i)) && rth.at(i) != '\'') {
+                if (! isupper(rth.at(i)) && rth.at(i) != '\'') {
                     this->first[left].insert(rth.at(i));
                     break;
                 }
-                if (std::isupper(rth.at(i))) {
+                if (isupper(rth.at(i))) {
                     Expression *pExprTmp;
                     if (i != rth.length()- 1 && rth.at(i+1) == '\'') {
                         pExprTmp = left2Expr[rth.substr(i, 2)];
