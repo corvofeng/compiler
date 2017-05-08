@@ -32,9 +32,6 @@ public:
         this->grammar = new Grammar(expr, size, nonTermHead);
         this->grammar->makeFirst();     // 产生first集合
 
-       // this->grammar->printFirst();
-
-        //lrStateStandard =
         LRState::getStandardState(this->grammar);
     }
 
@@ -138,20 +135,113 @@ public:
     }
 
     void makeACTION() {
-        cout << "max state" << id << endl;
-        vector<string> term;
-        vector<string> nonTerm;
+        cout << "max state " << id << endl;
+        map<string, int> term;
+        map<string, int> nonTerm;
 
+        vector<vector<string>> res_action(id);  // 创建长度为id的数组
+        vector<vector<int>> res_goto(id);       //
+
+
+        int termId = 0;
         for (auto it: this->grammar->term) {
-            term.push_back(it);
+            term.insert(std::make_pair(it, termId));
+            termId ++;
         }
+        term.insert(std::make_pair("$", termId));
+        termId++;
+
+        int nonTermId = 0;
         for (auto it: this->grammar->nonTerm) {
-            nonTerm.push_back(it);
+            nonTerm.insert(std::make_pair(it, nonTermId));
+            nonTermId++;
         }
-        term.push_back("$");
 
+        /*
+        for(auto it: term) {
+            cout << it << " ";
+        }
+        cout << endl;
 
+        for(auto it: nonTerm) {
+            cout << it << " ";
+        }
+        cout << endl;
+        */
+
+        // 初始化二维数组
+        int nonTermSize = nonTerm.size();
+        for (int i = 0; i < id; ++i) {
+            res_action[i].resize(nonTermSize);
+        }
+
+        // 初始化二维数组
+        int termSize = term.size();
+        for (int i = 0; i < id; ++i) {
+            res_goto[i].resize(termSize);
+        }
+
+        //string test = "$";
+        //cout << term.at(0) << endl;
+        this->haveTravel.clear();
+        actionHelp(this->lrStateVec.at(0), res_action, term);
+
+        for (int i = 0; i < id; ++i) {
+            for (int j = 0; j < termId - 1; ++j) {
+                cout << "\t*" << res_action[i][j] << "*\t";
+            }
+            cout << endl;
+        }
     }
+
+
+
+    void actionHelp(LRState *start, vector<vector<string>> &res_action, map<string, int>& term) {
+        if (haveTravel.find(start) != haveTravel.end()) {
+            return;
+        }
+        haveTravel.insert(start);
+        std::map<char, LRState*>& lrVec = start->out;
+
+        if (start->acc == 0) {
+            int col = state2id.at(start);
+            int row = term.at("$");
+            res_action[col][row] = "acc";
+        } else if (start->acc > 0) {
+            int col = state2id.at(start);
+            int reduceR = start->acc;
+            for (auto it: start->coreExpr) {
+                SingleExpress *sExpr = it;
+                if (sExpr->pos > sExpr->right.size()) {
+                    string t;
+                    t += sExpr->term;
+                    int row = term.at(t);
+                    res_action[col][row] = "r" + std::to_string(reduceR);
+                }
+            }
+        }
+
+        int col = state2id.at(start);
+        for(auto it: lrVec) {
+            char ch = it.first;
+            LRState *tmpLR = it.second;
+            int tmpId = state2id.at(tmpLR);
+
+            if (!isupper(ch)) {
+                string t;
+                t += ch;
+                int row = term.at(t);
+                int shiftR = state2id.at(tmpLR);
+                res_action[col][row] = "s" + std::to_string(shiftR);
+            }
+
+
+//            cout << state2id.at(start) << "<- " << ch << " ->" << state2id.at(tmpLR) << endl;;
+            this->showLR1(tmpLR);
+        }
+    }
+
+
 
     void makeGOTO() {
 

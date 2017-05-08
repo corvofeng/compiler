@@ -20,9 +20,18 @@ class LRState {
 public:
     static map<string, set<char>> first;
     static LRState* lrStateStandard;
+    static string nonTermHead;
 
     std::map<char, LRState*> out;
     std::set<char> maybeNext;
+
+    /**
+     * acc = -1; 表示该状态属于中间状态, 只能进行移入
+     * acc = 0; 表明该状态为可以接受, 即为完成
+     * acc > 0 表示使用第acc个数字的产生式可以将进行规约
+     *
+     */
+    int acc = -1;
 
     LRState(){}
 
@@ -33,7 +42,15 @@ public:
     }
 
     vector<SingleExpress*> singleExprVec;   // 存储所有的产生式
-    vector<SingleExpress*> coreExpr;        // 核心的expr
+
+    /**
+     * 对于普通的状态, 该变量表示核心的expr
+     *
+     *  对于静态变量lrStateStandard, 此时的coreExpr就表示所有的标准的产生式, 并且每个
+     * 产生式位置也为固定值
+     * @brief coreExpr
+     */
+    vector<SingleExpress*> coreExpr;
 
     /**
      * 获取标准的文法, 此处使用单例模式, 防止重复创建
@@ -53,6 +70,7 @@ public:
                 lrState->addCoreExpr(left, right, {});
             }
         }
+        nonTermHead = grammer->nonTermHead;
         lrStateStandard = lrState;
         return lrState;
     }
@@ -85,6 +103,13 @@ public:
 
             if (pos >= right.size()) { // 如果当前位置已经处于末尾, 则不进行处理
                 i++;
+
+                if (right.at(pos-1) == nonTermHead.at(0)) {
+                    this->acc = 0;
+                } else {
+                    this->acc = this->findExprByLeftRight(sExpr->left, right);
+         //           cout << "the acc is " << this->acc << endl;
+                }
                 continue;
             }
 
@@ -94,6 +119,19 @@ public:
             increaseState(Beta);
             i++;
         }
+    }
+
+    int findExprByLeftRight(string left, string right) {
+        //cout << "left is " << left << " right is " << right << endl;
+        vector<SingleExpress*> sExprVec = lrStateStandard->coreExpr;
+        for (int i = 0; i < sExprVec.size(); ++i) {
+            SingleExpress* tmp = sExprVec.at(i);
+            if (tmp->left == left && tmp->right == right) {
+                return i;
+            }
+        }
+        cout << "we have a mistake" << endl;
+        exit(1);
     }
 
     /**
@@ -266,5 +304,6 @@ public:
 
 LRState* LRState::lrStateStandard = NULL;
 map<string, set<char>> LRState::first;
+string LRState::nonTermHead;
 
 #endif
