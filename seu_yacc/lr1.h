@@ -49,7 +49,7 @@ public:
         state2id.insert(std::make_pair(start, id));
         id ++;
 
-       //start->printAllExpr();
+        //start->printAllExpr();
 
         // 遍历所有状态, 直到无法添加新的状态
         for (int i = 0; i < lrStateVec.size(); ++i) {
@@ -87,11 +87,18 @@ public:
     bool getAllNextState(LRState *start) {
 
         bool isAdd = false;
+
         for(char next : start->maybeNext) {
             LRState* nLRState  = new LRState();
             for (SingleExpress *sExpr : start->singleExprVec) {
 
                 int pos = sExpr->pos;
+
+                // 需要考虑right的长度是否比pos短, 如果短, 则继续匹配下一项, 否则进行匹配
+                if (sExpr->right.size() <= pos) {
+                    continue;
+                }
+
                 if (sExpr->right.at(pos) == next) {
                     pos += 1;
                     nLRState->addCoreExpr(sExpr->left, sExpr->right, pos, sExpr->term);
@@ -103,16 +110,18 @@ public:
                 isAdd = true;
                 this->lrStateVec.push_back(lrState);
 
-                /*
+/*
                 cout << "From " << next << "->" << endl;
                 cout << "---- before find all ------" << endl;
-                */
+*/
                 nLRState->findAllExpr();
-                /*
+
+/*
                 cout << "---- after find all -------" << endl;
                 nLRState->printAllExpr();
                 cout << "---------------------------" << endl << endl;
-                */
+*/
+
                 state2id.insert(std::make_pair(nLRState, id));
                 id ++;
 
@@ -188,9 +197,30 @@ public:
 
         this->printLR1();
         this->printGrammar();
+
+        cout << "Print action" << endl;
+
+        for (auto it: term) {
+            cout << it.first << ":  " << it.second << endl;
+        }
+
         for (int i = 0; i < id; ++i) {
             for (int j = 0; j < termId; ++j) {
                 cout << "\t*" << res_action[i][j] << "*\t";
+            }
+            cout << endl;
+        }
+
+        this->haveTravel.clear();
+        gotoHelp(this->lrStateVec.at(0), res_goto, nonTerm);
+
+        cout << "Print goto" << endl;
+        for (auto it: nonTerm) {
+            cout << it.first << ":  " << it.second << endl;
+        }
+        for (int i = 0; i < id; ++i) {
+            for (int j = 0; j < nonTermId; ++j) {
+                cout << "\t*" << res_goto[i][j] << "*\t";
             }
             cout << endl;
         }
@@ -256,11 +286,37 @@ public:
         }
     }
 
-
-
     void makeGOTO() {
 
     }
+
+    void gotoHelp(LRState *start, vector<vector<int>> &res_goto, map<string, int>& nonTerm) {
+        if (haveTravel.find(start) != haveTravel.end()) {
+            return;
+        }
+        haveTravel.insert(start);
+        std::map<char, LRState*>& lrVec = start->out;
+
+        int col = state2id.at(start);
+        for(auto it: lrVec) {
+            char ch = it.first;
+            LRState *tmpLR = it.second;
+            int tmpId = state2id.at(tmpLR);
+
+            if (isupper(ch)) {
+                string t;
+                t += ch;
+                int row = nonTerm.at(t);
+                int shiftR = state2id.at(tmpLR);
+                res_goto[col][row] =  shiftR;
+            }
+
+
+//            cout << state2id.at(start) << "<- " << ch << " ->" << state2id.at(tmpLR) << endl;;
+            this->gotoHelp(tmpLR, res_goto, nonTerm);
+        }
+    }
+
 
     /**
      *  该函数递归调用自身, 打印从start开始的所有状态, 并且通过haveTravel确保一个状态不会被
