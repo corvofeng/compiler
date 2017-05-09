@@ -32,6 +32,8 @@ public:
         this->grammar = new Grammar(expr, size, nonTermHead);
         this->grammar->makeFirst();     // 产生first集合
 
+        this->grammar->printFirst();
+
         LRState::getStandardState(this->grammar);
     }
 
@@ -166,18 +168,6 @@ public:
             nonTermId++;
         }
 
-        /*
-        for(auto it: term) {
-            cout << it << " ";
-        }
-        cout << endl;
-
-        for(auto it: nonTerm) {
-            cout << it << " ";
-        }
-        cout << endl;
-        */
-
         // 初始化二维数组
         int nonTermSize = nonTerm.size();
         for (int i = 0; i < id; ++i) {
@@ -195,8 +185,8 @@ public:
         this->haveTravel.clear();
         actionHelp(this->lrStateVec.at(0), res_action, term);
 
-        this->printLR1();
-        this->printGrammar();
+        //this->printLR1();
+        //this->printGrammar();
 
         cout << "Print action" << endl;
 
@@ -225,7 +215,6 @@ public:
             cout << endl;
         }
     }
-
 
     void printGrammar() {
         LRState* standard = LRState::lrStateStandard;
@@ -261,6 +250,12 @@ public:
                     string t;
                     t += sExpr->term;
                     int row = term.at(t);
+
+                    if (!res_action[col][row].empty()) {
+                        cout << "we have some thing wrong in " << col << " " << row << endl;
+                        exit(1);
+                    }
+
                     res_action[col][row] = "r" + std::to_string(reduceR);
                 }
             }
@@ -277,6 +272,8 @@ public:
                 t += ch;
                 int row = term.at(t);
                 int shiftR = state2id.at(tmpLR);
+                if (!res_action[col][row].empty())
+                    cout << "we have some thing wrong in " << col << " " << row << endl;
                 res_action[col][row] = "s" + std::to_string(shiftR);
             }
 

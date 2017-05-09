@@ -69,14 +69,21 @@ void yacc_test()
         "E->i"
     };
 
+    string expr3[4] = {
+        "E -> E + E",
+        "E -> E * E",
+//        "E -> (E)",
+        "E -> i"
+    };
 
-    LR1 lr1(expr2, 6, "S");
+
+    LR1 lr1(expr3, 3, "E");
     lr1.iterms();
 
     lr1.printLR1();
 
     lr1.makeACTION();
-    lr1.makeGOTO();
+    //lr1.makeGOTO();
 
 
     //Grammar grammar(expr, 8, "E");

@@ -104,8 +104,8 @@ public:
             if (pos >= right.size()) { // 如果当前位置已经处于末尾, 则不进行处理
                 i++;
 
-                if (right.at(pos-1) == nonTermHead.at(0)) {
-                    cout << right.at(pos - 1) << endl;
+                if (right.size() == 1 &&  right.at(0) == nonTermHead.at(0)) {
+                    //cout << right.at(pos - 1) << endl;
                     this->acc = -1;
                 } else {
                     this->acc = this->findExprByLeftRight(sExpr->left, right);
