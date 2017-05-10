@@ -25,6 +25,8 @@ public:
     std::map<char, LRState*> out;
     std::set<char> maybeNext;
 
+    string termAll;
+
     /**
      * acc = -2; 表示该状态属于中间状态, 只能进行移入
      * acc = -1; 表明该状态为可以接受, 即为完成
@@ -107,11 +109,15 @@ public:
             if (pos >= right.size()) { // 如果当前位置已经处于末尾, 则不进行处理
                 i++;
 
-                if (right.size() == 1 &&  right.at(0) == nonTermHead.at(0)) {
+                if (right.size() == 1 &&  right.at(0) == nonTermHead.at(0)) { // 当前状态为可接受
                     //cout << right.at(pos - 1) << endl;
                     this->acc = -1;
-                } else {
-                    this->acc = this->findExprByLeftRight(sExpr->left, right);
+                } else {        // 不可接受状态, 但已经到达末尾
+                    this->termAll += term;
+                    cout << "************" << endl;
+                    cout << this->termAll<< endl;
+                    cout << "************" << endl;
+                    this->acc = this->findExprByLeftRight(sExpr->left, right); // 找寻该表达式在标准表达式中的位置
          //           cout << "the acc is " << this->acc << endl;
                 }
                 continue;

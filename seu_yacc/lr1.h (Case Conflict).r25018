@@ -53,7 +53,7 @@ public:
     // 保存优先级, 例如 * > +, 则保存为 <*, +>
     map<string, string> prior;
 
-    // 保存结合性, 如果为*左结合, 则保存为 <*, 1>; 右结合保存为<*, 2>, 以此进行区分
+    // 保存结合性, 如果为*左结合, 则保存为 <*, 1>, 右结合保存为<*, 2>, 以此进行区分
     map<string, int> assoc;
 
 
@@ -308,43 +308,12 @@ public:
                 t += ch;
                 int row = term.at(t);
                 int shiftR = state2id.at(tmpLR);
-
-                if (!res_action[col][row].empty()) { // 先前已有规约, 需要考虑后再插入
+                if (!res_action[col][row].empty()) {
                     cout << "The t is " << t << " " << "termAll " << start->termAll << " ";
                     cout << "we have some thing wrong in " << col << " " << row << res_action[col][row] << endl;
-                    string old_reduce = res_action[col][row];
-
-
-                    if(this->prior.find(t) != this->prior.end()) { // 当前项优先级较高, 需要进行移入操作
-                        string be_lose = this->prior.at(t);
-                        for (int i = 0; i < tmpLR->coreExpr.size(); i++) {
-                            SingleExpress* sExprTmp = tmpLR->coreExpr.at(i);
-                            if (sExprTmp->right.size() >= sExprTmp->pos && sExprTmp->right.find(be_lose) != string::npos) {
-                                res_action[col][row] = "s" + std::to_string(shiftR);
-                            }
-                        }
-
-                    } else {
-                        // 当前项优先级较低, 先进行规约操作, 例如当前项为+, 式子终结符为*, 则先对前面一项进行规约
-                    }
-                    // 处理结合性
-                    for (auto it_term: start->termAll) {
-                        if (ch == it_term) {
-                            cout << "----------" << endl;
-                            cout << "The ch is " << ch << endl;
-                            cout << "----------" << endl;
-                            if (this->assoc.at(t) == 1) {
-                                // 左结合默认为规约操作,
-                            } else {    //  右结合则继续移入
-                                res_action[col][row] = "s" + std::to_string(shiftR);
-                            }
-                        }
-                    }
-
-                } else {
-                    res_action[col][row] = "s" + std::to_string(shiftR);
                 }
 
+                res_action[col][row] = "s" + std::to_string(shiftR);
             }
 
 

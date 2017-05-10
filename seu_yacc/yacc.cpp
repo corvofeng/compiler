@@ -69,20 +69,19 @@ void yacc_test()
         "E->i"
     };
 
-    string expr3[4] = {
-        "E -> E + E",
-        "E -> E * E",
-//        "E -> (E)",
-        "E -> i"
-    };
-
-
     map<string, string> prior;
     prior.insert(std::make_pair("*", "+"));
 
     map<string, int> assoc;
     assoc.insert(std::make_pair("*", 1));
     assoc.insert(std::make_pair("+", 1));
+
+    string expr3[4] = {
+        "E -> E + E",
+        "E -> E * E",
+//        "E -> (E)",
+        "E -> i"
+    };
 
     LR1 lr1(expr3, 3, "E", prior, assoc);
     lr1.iterms();
