@@ -57,8 +57,6 @@ public:
     map<string, int> assoc;
 
 
-
-
     void iterms() {
         // 构建初始状态
         LRState *start = new LRState();
@@ -72,7 +70,7 @@ public:
         state2id.insert(std::make_pair(start, id));
         id ++;
 
-        start->printAllExpr();
+      //  start->printAllExpr();
 
         // 遍历所有状态, 直到无法添加新的状态
         for (int i = 0; i < lrStateVec.size(); ++i) {
@@ -134,16 +132,20 @@ public:
                 this->lrStateVec.push_back(lrState);
 
 
+                /*
                 cout << "From " << next << "->" << endl;
                 cout << "---- before find all ------" << endl;
                 nLRState->printAllExpr();
+                */
 
                 nLRState->findAllExpr();
 
 
+                /*
                 cout << "---- after find all -------" << endl;
                 nLRState->printAllExpr();
                 cout << "---------------------------" << endl << endl;
+                */
 
 
                 state2id.insert(std::make_pair(nLRState, id));
@@ -238,6 +240,9 @@ public:
         }
     }
 
+    /*
+     * 打印文法
+     */
     void printGrammar() {
         LRState* standard = LRState::lrStateStandard;
         int size = standard->coreExpr.size();
@@ -310,16 +315,18 @@ public:
                 int shiftR = state2id.at(tmpLR);
 
                 if (!res_action[col][row].empty()) { // 先前已有规约, 需要考虑后再插入
+                    /*
                     cout << "The t is " << t << " " << "termAll " << start->termAll << " ";
                     cout << "we have some thing wrong in " << col << " " << row << res_action[col][row] << endl;
+                    */
                     string old_reduce = res_action[col][row];
 
 
                     if(this->prior.find(t) != this->prior.end()) { // 当前项优先级较高, 需要进行移入操作
                         string be_lose = this->prior.at(t);
-                        for (int i = 0; i < tmpLR->coreExpr.size(); i++) {
-                            SingleExpress* sExprTmp = tmpLR->coreExpr.at(i);
-                            if (sExprTmp->right.size() >= sExprTmp->pos && sExprTmp->right.find(be_lose) != string::npos) {
+                        for (int i = 0; i < start->coreExpr.size(); i++) {
+                            SingleExpress* sExprTmp = start->coreExpr.at(i);
+                            if (sExprTmp->right.size() <= sExprTmp->pos && sExprTmp->right.find(be_lose) != string::npos) {
                                 res_action[col][row] = "s" + std::to_string(shiftR);
                             }
                         }
@@ -327,12 +334,17 @@ public:
                     } else {
                         // 当前项优先级较低, 先进行规约操作, 例如当前项为+, 式子终结符为*, 则先对前面一项进行规约
                     }
+
                     // 处理结合性
                     for (auto it_term: start->termAll) {
                         if (ch == it_term) {
+
+                            /*
                             cout << "----------" << endl;
                             cout << "The ch is " << ch << endl;
                             cout << "----------" << endl;
+                            */
+
                             if (this->assoc.at(t) == 1) {
                                 // 左结合默认为规约操作,
                             } else {    //  右结合则继续移入

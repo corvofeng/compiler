@@ -74,9 +74,11 @@ public:
         }
         nonTermHead = grammer->nonTermHead;
         lrStateStandard = lrState;
+        /*
         cout << "-------------------------" << endl;
         lrStateStandard->printAllExpr();
         cout << "-------------------------" << endl;
+        */
         return lrState;
     }
 
@@ -114,9 +116,11 @@ public:
                     this->acc = -1;
                 } else {        // 不可接受状态, 但已经到达末尾
                     this->termAll += term;
+                    /*
                     cout << "************" << endl;
                     cout << this->termAll<< endl;
                     cout << "************" << endl;
+                    */
                     this->acc = this->findExprByLeftRight(sExpr->left, right); // 找寻该表达式在标准表达式中的位置
          //           cout << "the acc is " << this->acc << endl;
                 }
