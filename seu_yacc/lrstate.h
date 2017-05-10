@@ -67,11 +67,14 @@ public:
             string left = expr->left;
             for (auto right: expr->right) {
                 //SingleExpress* sExpr = new SingleExpress(left, right);
-                lrState->addCoreExpr(left, right, {});
+                lrState->addCoreExpr(left, right, 0, '?');
             }
         }
         nonTermHead = grammer->nonTermHead;
         lrStateStandard = lrState;
+        cout << "-------------------------" << endl;
+        lrStateStandard->printAllExpr();
+        cout << "-------------------------" << endl;
         return lrState;
     }
 

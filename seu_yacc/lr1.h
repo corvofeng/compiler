@@ -37,6 +37,27 @@ public:
         LRState::getStandardState(this->grammar);
     }
 
+    LR1(std::string *expr, int size, std::string nonTermHead, map<string, string> prior, map<string, int> assoc) {
+        this->grammar = new Grammar(expr, size, nonTermHead);
+        this->grammar->makeFirst();     // 产生first集合
+
+        //this->grammar->printFirst();
+
+        LRState::getStandardState(this->grammar);
+
+        this->prior = prior;
+        this->assoc = assoc;
+
+    }
+
+    // 保存优先级, 例如 * > +, 则保存为 <*, +>
+    map<string, string> prior;
+
+    // 保存结合性, 如果为*左结合, 则保存为 <*, 1>, 右结合保存为<*, 2>, 以此进行区分
+    map<string, int> assoc;
+
+
+
 
     void iterms() {
         // 构建初始状态
@@ -51,7 +72,7 @@ public:
         state2id.insert(std::make_pair(start, id));
         id ++;
 
-        //start->printAllExpr();
+        start->printAllExpr();
 
         // 遍历所有状态, 直到无法添加新的状态
         for (int i = 0; i < lrStateVec.size(); ++i) {
@@ -112,17 +133,18 @@ public:
                 isAdd = true;
                 this->lrStateVec.push_back(lrState);
 
-/*
+
                 cout << "From " << next << "->" << endl;
                 cout << "---- before find all ------" << endl;
-*/
+                nLRState->printAllExpr();
+
                 nLRState->findAllExpr();
 
-/*
+
                 cout << "---- after find all -------" << endl;
                 nLRState->printAllExpr();
                 cout << "---------------------------" << endl << endl;
-*/
+
 
                 state2id.insert(std::make_pair(nLRState, id));
                 id ++;
@@ -252,8 +274,7 @@ public:
                     int row = term.at(t);
 
                     if (!res_action[col][row].empty()) {
-                        cout << "we have some thing wrong in " << col << " " << row << endl;
-                        exit(1);
+                        cout << "we have some thing wrong in " << col << " " << row << "r" + std::to_string(reduceR) <<  endl;
                     }
 
                     res_action[col][row] = "r" + std::to_string(reduceR);
@@ -272,8 +293,10 @@ public:
                 t += ch;
                 int row = term.at(t);
                 int shiftR = state2id.at(tmpLR);
-                if (!res_action[col][row].empty())
-                    cout << "we have some thing wrong in " << col << " " << row << endl;
+                if (!res_action[col][row].empty()) {
+                    cout << "we have some thing wrong in " << col << " " << row << res_action[col][row] << endl;
+                }
+
                 res_action[col][row] = "s" + std::to_string(shiftR);
             }
 
