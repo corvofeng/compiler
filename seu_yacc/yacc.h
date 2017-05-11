@@ -16,4 +16,11 @@
 
 void yacc_test();
 
+class Yacc
+{
+public:
+    Yacc() {}
+
+};
+
 #endif

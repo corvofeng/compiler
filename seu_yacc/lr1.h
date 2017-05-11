@@ -27,7 +27,27 @@ public:
     vector<LRState*> lrStateVec;        // 保存创建的所有状态
     int id = 0;
 
+    /**
+     *  辅助变量, 递归调用终结标志
+     */
+    std::set<LRState*> haveTravel;
+
+    /*
+     * 由状态到id的映射, 仅作为排序使用
+     */
+    std::map<LRState*, int> state2id;
+
+    /*
+     * 存放ACTION表与GOTO表
+     */
+    vector<vector<string>> res_action;
+    vector<vector<int>> res_goto;
+    map<string, int> actionTerm;
+    map<string, int> gotoNonTerm;
+
+
     LR1() {}
+
     LR1(string* expr, int size, string nonTermHead) {
         this->grammar = new Grammar(expr, size, nonTermHead);
         this->grammar->makeFirst();     // 产生first集合
@@ -49,7 +69,6 @@ public:
 
         this->prior = prior;
         this->assoc = assoc;
-
     }
 
     ~LR1() {
@@ -114,10 +133,6 @@ public:
     bool getAllNextState(LRState *start);
 
 
-    std::set<LRState*> haveTravel;
-    std::map<LRState*, int> state2id;
-
-
     /**
      * 打印当前LR1的所有状态, 以及到达路径
      *   0<- E ->1
@@ -128,15 +143,6 @@ public:
         LRState* start = this->lrStateVec.at(0);
         this->showLR1(start);
     }
-
-
-    /*
-     * 存放ACTION表与GOTO表
-     */
-    vector<vector<string>> res_action;
-    vector<vector<int>> res_goto;
-    map<string, int> actionTerm;
-    map<string, int> gotoNonTerm;
 
 
     /**
@@ -203,7 +209,6 @@ public:
      * @param start
      */
     void showLR1(LRState* start);
-
 
 };
 

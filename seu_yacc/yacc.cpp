@@ -83,13 +83,15 @@ void yacc_test()
         "E -> i"
     };
 
-    LR1 lr1(expr3, 3, "E", prior, assoc);
-    lr1.iterms();
+    LR1 *lr1 = new LR1(expr3, 3, "E", prior, assoc);
+    lr1->iterms();
 
     //lr1.printLR1();
 
-    lr1.makeACTIONGOTO();
-    //lr1.makeGOTO();
+    lr1->makeACTIONGOTO();
+    lr1->printACTIONGOTO();
+
+    delete lr1;
 
 
     //Grammar grammar(expr, 8, "E");

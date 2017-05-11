@@ -17,9 +17,6 @@
 #include <stdio.h>
 #include <vector>
 #include <iostream>
-//#include "grammar.h"
-
-//class Grammar;
 
 using std::string;
 using std::set;

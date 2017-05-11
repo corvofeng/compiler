@@ -90,13 +90,12 @@ bool LR1::getAllNextState(LRState *start) {
     return isAdd;
 }
 
-void LR1::makeACTIONGOTO() {
-    cout << "max state " << id << endl;
 
-    //res_action = new vector<vector<string>>(id);  // 创建长度为id的数组
+void LR1::makeACTIONGOTO() {
+    //cout << "max state " << id << endl;
+
     res_action.resize(id);
     res_goto.resize(id);
-
 
     int termId = 0;
     for (auto it: this->grammar->term) {
