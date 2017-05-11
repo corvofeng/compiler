@@ -88,7 +88,7 @@ void yacc_test()
 
     //lr1.printLR1();
 
-    lr1.makeACTION();
+    lr1.makeACTIONGOTO();
     //lr1.makeGOTO();
 
 

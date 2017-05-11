@@ -316,8 +316,5 @@ public:
 
 };
 
-LRState* LRState::lrStateStandard = NULL;
-map<string, set<char>> LRState::first;
-string LRState::nonTermHead;
 
 #endif

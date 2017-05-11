@@ -15,6 +15,7 @@
 #include "expression.h"
 #include <map>
 #include <vector>
+#include <algorithm>
 
 using std::map;
 using std::cout;

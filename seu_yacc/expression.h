@@ -16,6 +16,7 @@
 #include <string>
 #include <stdio.h>
 #include <vector>
+#include <iostream>
 //#include "grammar.h"
 
 //class Grammar;

@@ -56,28 +56,11 @@ public:
     // 保存结合性, 如果为*左结合, 则保存为 <*, 1>; 右结合保存为<*, 2>, 以此进行区分
     map<string, int> assoc;
 
-
-    void iterms() {
-        // 构建初始状态
-        LRState *start = new LRState();
-        char term = ('$');
-        string left = "#";
-        string right = this->grammar->getNonTermHead();
-        start->addCoreExpr(left, right, term);
-
-        start->findAllExpr();
-        lrStateVec.push_back(start);
-        state2id.insert(std::make_pair(start, id));
-        id ++;
-
-      //  start->printAllExpr();
-
-        // 遍历所有状态, 直到无法添加新的状态
-        for (int i = 0; i < lrStateVec.size(); ++i) {
-            getAllNextState(lrStateVec.at(i));
-        }
-
-    }
+    /**
+     * 此函数构建LR1状态转换图, 到达一个状态后, 将会与之前的状态进行比较
+     * @brief iterms
+     */
+    void iterms();
 
     /**
      * 检测该状态是否已经在状态向量中,
@@ -105,135 +88,96 @@ public:
      * @param start
      * @return
      */
-    bool getAllNextState(LRState *start) {
-
-        bool isAdd = false;
-
-        for(char next : start->maybeNext) {
-            LRState* nLRState  = new LRState();
-            for (SingleExpress *sExpr : start->singleExprVec) {
-
-                int pos = sExpr->pos;
-
-                // 需要考虑right的长度是否比pos短, 如果短, 则继续匹配下一项, 否则进行匹配
-                if (sExpr->right.size() <= pos) {
-                    continue;
-                }
-
-                if (sExpr->right.at(pos) == next) {
-                    pos += 1;
-                    nLRState->addCoreExpr(sExpr->left, sExpr->right, pos, sExpr->term);
-                }
-            }
-            LRState* lrState = this->alreadyHave(nLRState);
-            if (lrState == NULL) { // 如果之前不存在这样的状态, 直接进行加入
-                lrState = nLRState;
-                isAdd = true;
-                this->lrStateVec.push_back(lrState);
-
-
-                /*
-                cout << "From " << next << "->" << endl;
-                cout << "---- before find all ------" << endl;
-                nLRState->printAllExpr();
-                */
-
-                nLRState->findAllExpr();
-
-
-                /*
-                cout << "---- after find all -------" << endl;
-                nLRState->printAllExpr();
-                cout << "---------------------------" << endl << endl;
-                */
-
-
-                state2id.insert(std::make_pair(nLRState, id));
-                id ++;
-
-            } else {
-                delete nLRState;   // 否则加入该边
-            }
-            start->out.insert(std::make_pair(next, lrState));
-        }
-
-        return isAdd;
-    }
+    bool getAllNextState(LRState *start);
 
     std::set<LRState*> haveTravel;
     std::map<LRState*, int> state2id;
 
+    /**
+     * 打印当前LR1的所有状态, 以及到达路径
+     *   0<- E ->1
+     * @brief printLR1
+     */
     void printLR1() {
         haveTravel.clear();
         LRState* start = this->lrStateVec.at(0);
         this->showLR1(start);
     }
 
-    void makeACTION() {
-        cout << "max state " << id << endl;
-        map<string, int> term;
-        map<string, int> nonTerm;
+    /*
+     * 存放ACTION表与GOTO表
+     */
+    vector<vector<string>> res_action;
+    vector<vector<int>> res_goto;       //
+    map<string, int> actionTerm;
+    map<string, int> gotoNonTerm;
 
-        vector<vector<string>> res_action(id);  // 创建长度为id的数组
-        vector<vector<int>> res_goto(id);       //
+
+    void makeACTIONGOTO() {
+        cout << "max state " << id << endl;
+
+        //res_action = new vector<vector<string>>(id);  // 创建长度为id的数组
+        res_action.resize(id);
+        res_goto.resize(id);
 
 
         int termId = 0;
         for (auto it: this->grammar->term) {
-            term.insert(std::make_pair(it, termId));
+            actionTerm.insert(std::make_pair(it, termId));
             termId ++;
         }
-        term.insert(std::make_pair("$", termId));
+        actionTerm.insert(std::make_pair("$", termId));
         termId++;
 
         int nonTermId = 0;
         for (auto it: this->grammar->nonTerm) {
-            nonTerm.insert(std::make_pair(it, nonTermId));
+            gotoNonTerm.insert(std::make_pair(it, nonTermId));
             nonTermId++;
         }
 
         // 初始化二维数组
-        int nonTermSize = nonTerm.size();
+        int nonTermSize = gotoNonTerm.size();
         for (int i = 0; i < id; ++i) {
             res_action[i].resize(termId);
         }
 
         // 初始化二维数组
-        int termSize = term.size();
+        int termSize = actionTerm.size();
         for (int i = 0; i < id; ++i) {
             res_goto[i].resize(nonTermId);
         }
 
-        //string test = "$";
-        //cout << term.at(0) << endl;
         this->haveTravel.clear();
-        actionHelp(this->lrStateVec.at(0), res_action, term);
+        actionHelp(this->lrStateVec.at(0), res_action, actionTerm);
 
-        //this->printLR1();
-        //this->printGrammar();
+        this->haveTravel.clear();
+        gotoHelp(this->lrStateVec.at(0), res_goto, gotoNonTerm);
+
+    }
+
+    void printACTIONGOTO() {
 
         cout << "Print action" << endl;
-
-        for (auto it: term) {
+        for (auto it: actionTerm) {
             cout << it.first << ":  " << it.second << endl;
         }
 
+        int termSize = actionTerm.size();
         for (int i = 0; i < id; ++i) {
-            for (int j = 0; j < termId; ++j) {
-                cout << "\t*" << res_action[i][j] << "*\t";
+            for (int j = 0; j < termSize; ++j) {
+                cout << "\t*" << (res_action)[i][j] << "*\t";
             }
             cout << endl;
         }
 
-        this->haveTravel.clear();
-        gotoHelp(this->lrStateVec.at(0), res_goto, nonTerm);
 
         cout << "Print goto" << endl;
-        for (auto it: nonTerm) {
+        int nonTermSize = gotoNonTerm.size();
+        for (auto it: gotoNonTerm) {
             cout << it.first << ":  " << it.second << endl;
         }
         for (int i = 0; i < id; ++i) {
-            for (int j = 0; j < nonTermId; ++j) {
+            for (int j = 0; j < nonTermSize; ++j) {
                 cout << "\t*" << res_goto[i][j] << "*\t";
             }
             cout << endl;
