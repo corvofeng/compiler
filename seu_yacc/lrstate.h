@@ -16,6 +16,11 @@
 #include "expression.h"
 #include "grammar.h"
 
+/**
+ *   该类记录了LR1状态转换图中的每一个状态, 对于各种状态信息来说, 我们需要有标准状态来与其进行
+ * 对比, 此类拥有静态变量lrStateStandard, 在调用此类时, 首先进行请求getStandardState
+ * @brief The LRState class
+ */
 class LRState {
 public:
     static map<string, set<char>> first;
@@ -28,6 +33,7 @@ public:
     string termAll;
 
     /**
+     *
      * acc = -2; 表示该状态属于中间状态, 只能进行移入
      * acc = -1; 表明该状态为可以接受, 即为完成
      * acc >= 0; 表示使用第acc个数字的产生式可以将进行规约

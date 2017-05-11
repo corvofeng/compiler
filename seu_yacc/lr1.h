@@ -37,7 +37,9 @@ public:
         LRState::getStandardState(this->grammar);
     }
 
-    LR1(std::string *expr, int size, std::string nonTermHead, map<string, string> prior, map<string, int> assoc) {
+    LR1(string *expr, int size, string nonTermHead,
+          map<string, string> prior, map<string, int> assoc) {
+
         this->grammar = new Grammar(expr, size, nonTermHead);
         this->grammar->makeFirst();     // 产生first集合
 
@@ -50,6 +52,19 @@ public:
 
     }
 
+    ~LR1() {
+        for(auto it : lrStateVec) {
+            delete it;
+        }
+        lrStateVec.clear();
+
+        LRState::deleteStandardState();
+        if (grammar) {
+            delete grammar;
+        }
+    }
+
+
     // 保存优先级, 例如 * > +, 则保存为 <*, +>
     map<string, string> prior;
 
@@ -57,7 +72,10 @@ public:
     map<string, int> assoc;
 
     /**
-     * 此函数构建LR1状态转换图, 到达一个状态后, 将会与之前的状态进行比较
+     *   此函数构建LR1状态转换图, 首先插入(push_back)初始状态. 因此, lrStateVec[0]为初
+     * 始状态, 并且开始调用getAllNextState(start), 如果此时状态增加了, 那么将会继续循环
+     * 直至所有状态都获取了它的下一个状态族
+     *
      * @brief iterms
      */
     void iterms();
@@ -81,8 +99,13 @@ public:
         return NULL;
     }
 
+
     /**
-     * 获取该状态所有的后继状态, 并将这些状态添加到状态向量组中, 同时为状态进行编号
+     *   获取该状态所有的后继状态, 如果该状态已经存在于之前的状态中, 那么将会将原状态添加到该状
+     * 态的后继状态族中, 此时不向状态向量组中添加状态
+     *
+     *   如果此时获得的状态为新的状态, 该状态添加到状态向量组中, 同时为状态进行编号, 编号信息
+     * 保存在state2id映射中
      *
      * @brief getAllNextState
      * @param start
@@ -90,8 +113,10 @@ public:
      */
     bool getAllNextState(LRState *start);
 
+
     std::set<LRState*> haveTravel;
     std::map<LRState*, int> state2id;
+
 
     /**
      * 打印当前LR1的所有状态, 以及到达路径
@@ -104,88 +129,33 @@ public:
         this->showLR1(start);
     }
 
+
     /*
      * 存放ACTION表与GOTO表
      */
     vector<vector<string>> res_action;
-    vector<vector<int>> res_goto;       //
+    vector<vector<int>> res_goto;
     map<string, int> actionTerm;
     map<string, int> gotoNonTerm;
 
 
-    void makeACTIONGOTO() {
-        cout << "max state " << id << endl;
-
-        //res_action = new vector<vector<string>>(id);  // 创建长度为id的数组
-        res_action.resize(id);
-        res_goto.resize(id);
-
-
-        int termId = 0;
-        for (auto it: this->grammar->term) {
-            actionTerm.insert(std::make_pair(it, termId));
-            termId ++;
-        }
-        actionTerm.insert(std::make_pair("$", termId));
-        termId++;
-
-        int nonTermId = 0;
-        for (auto it: this->grammar->nonTerm) {
-            gotoNonTerm.insert(std::make_pair(it, nonTermId));
-            nonTermId++;
-        }
-
-        // 初始化二维数组
-        int nonTermSize = gotoNonTerm.size();
-        for (int i = 0; i < id; ++i) {
-            res_action[i].resize(termId);
-        }
-
-        // 初始化二维数组
-        int termSize = actionTerm.size();
-        for (int i = 0; i < id; ++i) {
-            res_goto[i].resize(nonTermId);
-        }
-
-        this->haveTravel.clear();
-        actionHelp(this->lrStateVec.at(0), res_action, actionTerm);
-
-        this->haveTravel.clear();
-        gotoHelp(this->lrStateVec.at(0), res_goto, gotoNonTerm);
-
-    }
-
-    void printACTIONGOTO() {
-
-        cout << "Print action" << endl;
-        for (auto it: actionTerm) {
-            cout << it.first << ":  " << it.second << endl;
-        }
-
-        int termSize = actionTerm.size();
-        for (int i = 0; i < id; ++i) {
-            for (int j = 0; j < termSize; ++j) {
-                cout << "\t*" << (res_action)[i][j] << "*\t";
-            }
-            cout << endl;
-        }
+    /**
+     * 此函数制作ACTION与GOTO表
+     * @brief makeACTIONGOTO
+     */
+    void makeACTIONGOTO();
 
 
-        cout << "Print goto" << endl;
-        int nonTermSize = gotoNonTerm.size();
-        for (auto it: gotoNonTerm) {
-            cout << it.first << ":  " << it.second << endl;
-        }
-        for (int i = 0; i < id; ++i) {
-            for (int j = 0; j < nonTermSize; ++j) {
-                cout << "\t*" << res_goto[i][j] << "*\t";
-            }
-            cout << endl;
-        }
-    }
+    /**
+     * 打印ACTION与GOTO表
+     * @brief printACTIONGOTO
+     */
+    void printACTIONGOTO();
 
-    /*
+
+    /**
      * 打印文法
+     * @brief printGrammar
      */
     void printGrammar() {
         LRState* standard = LRState::lrStateStandard;
@@ -212,169 +182,28 @@ public:
      * @param res_action
      * @param term
      */
-    void actionHelp(LRState *start, vector<vector<string>> &res_action, map<string, int>& term) {
-        if (haveTravel.find(start) != haveTravel.end()) {
-            return;
-        }
-        haveTravel.insert(start);
-        std::map<char, LRState*>& lrVec = start->out;
-
-        /*
-         * 当前状态如果为终止状态
-         */
-        if (start->acc == -1) {
-            int col = state2id.at(start);
-            int row = term.at("$");
-            res_action[col][row] = "acc";
-        } else if (start->acc >= 0) {
-            int col = state2id.at(start);
-            int reduceR = start->acc;
-            for (auto it: start->coreExpr) {
-                SingleExpress *sExpr = it;
-                if (sExpr->pos >= sExpr->right.size()) {
-                    string t;
-                    t += sExpr->term;
-                    int row = term.at(t);
-
-                    if (!res_action[col][row].empty()) {  // 由于该过程总是最先进行, 不可能会在此处产生冲突
-                        cout << "we have some thing wrong in " << col << " " << row << "r" + std::to_string(reduceR) <<  endl;
-                        exit(1);
-                    }
-
-                    res_action[col][row] = "r" + std::to_string(reduceR);
-                }
-            }
-        }
-
-        int col = state2id.at(start);
-        for(auto it: lrVec) {
-            char ch = it.first;
-            LRState *tmpLR = it.second;
-            int tmpId = state2id.at(tmpLR);
-
-            if (!isupper(ch)) {
-                string t;
-                t += ch;
-                int row = term.at(t);
-                int shiftR = state2id.at(tmpLR);
-
-                if (!res_action[col][row].empty()) { // 先前已有规约, 需要考虑后再插入
-                    /*
-                    cout << "The t is " << t << " " << "termAll " << start->termAll << " ";
-                    cout << "we have some thing wrong in " << col << " " << row << res_action[col][row] << endl;
-                    */
-                    string old_reduce = res_action[col][row];
+    void actionHelp(LRState *start, vector<vector<string>> &res_action,
+                    map<string, int>& term);
 
 
-                    if(this->prior.find(t) != this->prior.end()) { // 当前项优先级较高, 需要进行移入操作
-                        string be_lose = this->prior.at(t);
-                        for (int i = 0; i < start->coreExpr.size(); i++) {
-                            SingleExpress* sExprTmp = start->coreExpr.at(i);
-                            if (sExprTmp->right.size() <= sExprTmp->pos && sExprTmp->right.find(be_lose) != string::npos) {
-                                res_action[col][row] = "s" + std::to_string(shiftR);
-                            }
-                        }
-
-                    } else {
-                        // 当前项优先级较低, 先进行规约操作, 例如当前项为+, 式子终结符为*, 则先对前面一项进行规约
-                    }
-
-                    // 处理结合性
-                    for (auto it_term: start->termAll) {
-                        if (ch == it_term) {
-
-                            /*
-                            cout << "----------" << endl;
-                            cout << "The ch is " << ch << endl;
-                            cout << "----------" << endl;
-                            */
-
-                            if (this->assoc.at(t) == 1) {
-                                // 左结合默认为规约操作,
-                            } else {    //  右结合则继续移入
-                                res_action[col][row] = "s" + std::to_string(shiftR);
-                            }
-                        }
-                    }
-
-                } else {
-                    res_action[col][row] = "s" + std::to_string(shiftR);
-                }
-
-            }
-
-
-//            cout << state2id.at(start) << "<- " << ch << " ->" << state2id.at(tmpLR) << endl;;
-            this->actionHelp(tmpLR, res_action, term);
-        }
-    }
-
-    void makeGOTO() {
-
-    }
-
-    void gotoHelp(LRState *start, vector<vector<int>> &res_goto, map<string, int>& nonTerm) {
-        if (haveTravel.find(start) != haveTravel.end()) {
-            return;
-        }
-        haveTravel.insert(start);
-        std::map<char, LRState*>& lrVec = start->out;
-
-        int col = state2id.at(start);
-        for(auto it: lrVec) {
-            char ch = it.first;
-            LRState *tmpLR = it.second;
-            int tmpId = state2id.at(tmpLR);
-
-            if (isupper(ch)) {
-                string t;
-                t += ch;
-                int row = nonTerm.at(t);
-                int shiftR = state2id.at(tmpLR);
-                res_goto[col][row] =  shiftR;
-            }
-
-
-//            cout << state2id.at(start) << "<- " << ch << " ->" << state2id.at(tmpLR) << endl;;
-            this->gotoHelp(tmpLR, res_goto, nonTerm);
-        }
-    }
+    /**
+     * @brief gotoHelp
+     * @param start
+     * @param res_goto
+     * @param nonTerm
+     */
+    void gotoHelp(LRState *start, vector<vector<int>> &res_goto,
+                  map<string, int>& nonTerm);
 
 
     /**
      *  该函数递归调用自身, 打印从start开始的所有状态, 并且通过haveTravel确保一个状态不会被
-     * 重复访问
+     * 重复访问 (辅助函数)
      * @brief showLR1
      * @param start
      */
-    void showLR1(LRState* start) {
-        if (haveTravel.find(start) != haveTravel.end()) {
-            return;
-        }
-        haveTravel.insert(start);
+    void showLR1(LRState* start);
 
-        std::map<char, LRState*>& lrVec = start->out;
-        for(auto it: lrVec) {
-            char ch = it.first;
-            LRState *tmpLR = it.second;
-
-            cout << state2id.at(start) << "<- " << ch << " ->" << state2id.at(tmpLR) << endl;;
-            this->showLR1(tmpLR);
-        }
-    }
-
-
-    ~LR1() {
-        for(auto it : lrStateVec) {
-            delete it;
-        }
-        lrStateVec.clear();
-
-        LRState::deleteStandardState();
-        if (grammar) {
-            delete grammar;
-        }
-    }
 
 };
 

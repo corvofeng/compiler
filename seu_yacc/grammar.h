@@ -127,50 +127,7 @@ public:
      * @brief dfs
      * @param pExpr
      */
-    void dfs(Expression* pExpr) {
-        if (isOver.at(pExpr) == true) {
-            //cout << pExpr->left << "  ok" << endl;
-            return;
-        }
-        isOver[pExpr] = true;
-
-        string left = pExpr->left;
-        for (auto rh : pExpr->right) {
-            string& rth = rh;
-
-            for (int i = 0; i < rth.length(); ++i) {
-                if (! isupper(rth.at(i)) && rth.at(i) != '\'') {
-                    this->first[left].insert(rth.at(i));
-                    break;
-                }
-                if (isupper(rth.at(i))) {
-                    Expression *pExprTmp;
-                    if (i != rth.length()- 1 && rth.at(i+1) == '\'') {
-                        pExprTmp = left2Expr[rth.substr(i, 2)];
-                    } else {
-                        pExprTmp = left2Expr[rth.substr(i, 1)];
-                    }
-                    string& exprLeftTmp = pExprTmp->left;
-                    dfs(pExprTmp);
-                    set<char> & tmp = this->first[exprLeftTmp];
-                    set<char>::iterator it1 = tmp.begin();
-                    bool flag = true;
-                    for(; it1 != tmp.end(); it1++) {
-                        if (*it1 == '~')  {
-                            flag = false;
-                        }
-                        this->first[left].insert(*it1);
-                    }
-
-                    if (flag) {
-                        break;
-                    }
-                }
-
-
-            }
-        }
-    }
+    void dfs(Expression* pExpr);
 
     void printFirst() {
         cout << "\nprint first : " << endl;
@@ -188,6 +145,10 @@ public:
 
     map<Expression*, bool> isOver;
 
+    /**
+     * 获取该文法的First集合, 通过dfs函就数进行计算
+     * @brief makeFirst
+     */
     void makeFirst() {
         // 此处虽为循环调用, 但实际上执行时, 很多情况会直接返回, 复杂度并不很高
         for (auto it : pExprVec) {

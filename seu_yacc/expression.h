@@ -61,7 +61,16 @@ public:
 
 };
 
-// 单个表达式
+/**
+ *   单个表达式的表示, 在LR1状态转换图中, 单个的表达式需要有各种信息记录, 其中包括:
+ * 当前表达式解析到的位置, 当前表达式的终止符
+ *
+ * 例如:
+ *   S -> aB.c,  $
+ * 其中.表示此次解析到达c字母之前, 而且此表达式的终止符为$
+ *
+ * @brief The SingleExpress class
+ */
 class SingleExpress
 {
 public:
@@ -72,6 +81,7 @@ public:
 
     SingleExpress() {}
 
+
     SingleExpress(string left, string right, int pos, char term) {
         this->left = left;
         this->right = right;
@@ -79,12 +89,20 @@ public:
         this->pos = pos;
     }
 
+
     SingleExpress(string &left, string &right, char term) {
         this->left = left;
         this->right = right;
         this->term = term;
     }
 
+
+    /**
+     * 判断两个表达式是否相同, 如果各项状态都相同方可
+     * @brief isEqual
+     * @param tmpExpr
+     * @return
+     */
     bool isEqual(SingleExpress *tmpExpr) {
 
         if (this->left == tmpExpr->left &&
@@ -97,22 +115,15 @@ public:
         return false;
     }
 
+
     void printSigleExpr() {
-        cout << left << " -> " << right.substr(0, pos) << '.' << right.substr(pos) << "    ";
+        cout << left << " -> " <<
+                right.substr(0, pos) << '.' << right.substr(pos) << "    ";
 
         cout << "term char: " << term;
 
-        /*
-        for (auto ch : term) {
-            cout << ch << " ";
-        }
-        */
         cout << endl;
     }
 };
-
-using std::vector;
-
-
 
 #endif
