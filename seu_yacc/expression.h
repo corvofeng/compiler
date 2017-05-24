@@ -33,6 +33,7 @@ class Expression
 public:
     string left;
     set<string> right;
+    string func;
 
     Expression(string left) {
         this->left = left;
@@ -73,6 +74,7 @@ class SingleExpress
 public:
     string left;
     string right;
+    string func;
     int pos = 0;
     char term;
 
@@ -84,6 +86,15 @@ public:
         this->right = right;
         this->term = term;
         this->pos = pos;
+    }
+
+
+    SingleExpress(string left, string right, int pos, char term, string func) {
+        this->left = left;
+        this->right = right;
+        this->term = term;
+        this->pos = pos;
+        this->func = func;
     }
 
 

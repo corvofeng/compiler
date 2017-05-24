@@ -45,6 +45,8 @@ public:
     map<string, int> actionTerm;
     map<string, int> gotoNonTerm;
 
+    LRState* standardState;
+
 
     LR1() {}
 
@@ -54,7 +56,7 @@ public:
 
         this->grammar->printFirst();
 
-        LRState::getStandardState(this->grammar);
+        standardState = LRState::getStandardState(this->grammar);
     }
 
     LR1(string *expr, int size, string nonTermHead,
@@ -65,7 +67,20 @@ public:
 
         //this->grammar->printFirst();
 
-        LRState::getStandardState(this->grammar);
+        standardState = LRState::getStandardState(this->grammar);
+
+        this->prior = prior;
+        this->assoc = assoc;
+    }
+
+    LR1(map<string, string>& exprFunc, string nonTermHead,
+        map<string, string>prior, map<string, int> assoc) {
+
+
+        this->grammar = new Grammar(exprFunc, nonTermHead);
+        this->grammar->makeFirst();     // 产生first集合
+
+        standardState = LRState::getStandardState(this->grammar);
 
         this->prior = prior;
         this->assoc = assoc;

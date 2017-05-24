@@ -42,6 +42,39 @@ public:
 
 
     Grammar() {}
+
+    Grammar(std::map<string, string>& exprFunc, string nonTermHead) {
+        for(auto it: exprFunc) {
+            string expr = it.first;
+            string func = it.second;
+
+            expr.erase(std::remove_if(expr.begin(), expr.end(),
+                                    [](char c){return (c == '\r' || c == '\t' || c == ' ');}),
+                                    expr.end());
+            string& s = expr;
+            int j, len = s.size();
+            for (j = 0; j < len; ++j) {
+                if (s[j] == '-') break;
+            }
+            string left = s.substr(0, j);
+            this->nonTerm.insert(left);
+            j += 2;
+            string right = s.substr(j, len - j);
+            for (auto it: right) {
+                string s;
+                s += it;
+                if (isupper(it)) {
+                    this->nonTerm.insert(s);
+                } else {
+                    this->term.insert(s);
+                }
+            }
+            this->insert(left, right, func);
+
+        }
+        this->nonTermHead = nonTermHead;
+    }
+
     Grammar(string* expr, int size, string nonTermHead) {
         for (int i = 0; i < size; ++i) {
             // 消除空格
@@ -166,6 +199,21 @@ public:
         }
 
         Expression *pExpr = new Expression(left);
+        pExpr->insert(right);
+        left2Expr.insert(std::make_pair(left, pExpr));
+        pExprVec.push_back(pExpr);
+        isOver[pExpr] = false;
+    }
+
+    void insert(std::string left, std::string right, std::string func) {
+        if (left2Expr.find(left) != left2Expr.end()) {
+            left2Expr.at(left)->insert(right);
+            return;
+        }
+
+        Expression *pExpr = new Expression(left);
+        cout << "Insert func is " << func << endl;
+        pExpr->func = func;
         pExpr->insert(right);
         left2Expr.insert(std::make_pair(left, pExpr));
         pExprVec.push_back(pExpr);

@@ -207,6 +207,16 @@ public:
         }
     }
 
+    void addCoreExpr(std::string &left, std::string &right, int pos, char term, string func) {
+        SingleExpress* singleExpress = new SingleExpress(left, right, pos, term, func);
+        this->coreExpr.push_back(singleExpress);
+        this->singleExprVec.push_back(singleExpress);
+
+        if (pos < right.size()) {
+            this->maybeNext.insert(right.at(pos));
+        }
+    }
+
 
     void addExpr(Expression& expr) {
         string left = expr.left;

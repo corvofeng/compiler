@@ -1,3 +1,7 @@
 
 
-file(COPY ./main.c ./run.sh ./MyMake ./require.l DESTINATION ${PROJECT_BINARY_DIR}/input)
+file(COPY
+    ./main.c ./require.l
+    ./run.sh ./MyMake
+    ./yacc_test.c ./require.y ./lex.out
+    DESTINATION ${PROJECT_BINARY_DIR}/input)

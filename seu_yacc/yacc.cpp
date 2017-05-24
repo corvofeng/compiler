@@ -70,7 +70,8 @@ void yacc_test()
     };
 
     map<string, string> prior;
-    prior.insert(std::make_pair("*", "+"));
+    prior.insert(std::make_pair("+", "-"));
+    prior.insert(std::make_pair("*", "/"));
 
     map<string, int> assoc;
     assoc.insert(std::make_pair("*", 1));
@@ -83,7 +84,17 @@ void yacc_test()
         "E -> i"
     };
 
-    LR1 *lr1 = new LR1(expr3, 3, "E", prior, assoc);
+    map<string, string> exprFunc4;
+    exprFunc4.insert(std::make_pair("A->A+A", "{$$=$1+$3;}"));
+    exprFunc4.insert(std::make_pair("A->A-A", "{$$=$1-$3;}"));
+    exprFunc4.insert(std::make_pair("A->A*A", "{$$=$1*$3;}"));
+    exprFunc4.insert(std::make_pair("A->A/A", "{$$=$1/$3;}"));
+    exprFunc4.insert(std::make_pair("A->a", ""));
+
+
+    //LR1 *lr1 = new LR1(expr3, 3, "E", prior, assoc);
+    /*
+    LR1 *lr1 = new LR1(exprFunc4, "A", prior, assoc);
     lr1->iterms();
 
     //lr1.printLR1();
@@ -92,7 +103,13 @@ void yacc_test()
     lr1->printACTIONGOTO();
 
     delete lr1;
+    */
 
+    Yacc *yacc = new Yacc("../input/require.y", "../input/output_yacc.c");
+    yacc->scanner();
+    yacc->buildTable();
+    yacc->parse("../input/lex.out");
+    delete yacc;
 
     //Grammar grammar(expr, 8, "E");
     /*

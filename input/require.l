@@ -105,7 +105,7 @@ digit=isDigit
 }
 //[\+\-]?[\d]+([\.][\d]*)?([Ee][+-]?[\d]+)?
 %$
-(%+|-)?{digit}+(%.{digit}*)?((E|e)(%+|-)?{digit}+)? {
+(-)?{digit}+(%.{digit}*)?((E|e)(%+|-)?{digit}+)? {
     printf("<$NUM,%s>\n", SYLEX_TEXT);
 }
 %$
