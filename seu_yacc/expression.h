@@ -36,7 +36,7 @@ class Expression
 public:
     string left;
     set<string> right;
-    string func;
+   // string func;
     std::map<string, string> right2func;
 
     Expression(string left) {
@@ -63,7 +63,7 @@ public:
 
     void insert(string& s, string& func) {
         right.insert(s);
-        this->func = func;
+//        this->func = func;
         right2func.insert(std::make_pair(s, func));
     }
 
@@ -138,7 +138,7 @@ public:
         cout << left << " -> " <<
                 right.substr(0, pos) << '.' << right.substr(pos) << "    ";
 
-        cout << "term char: " << term;
+        cout << "term char: " << term << " ---- " << func;
 
         cout << endl;
     }

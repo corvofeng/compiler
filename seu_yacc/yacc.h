@@ -164,17 +164,13 @@ public:
      * @brief buildTable
      */
     void buildTable() {
-
         for (auto it: expr2func) {
             cout << it.first << ": " << it.second << endl;
         }
         lr1 = new LR1(expr2func, "A", prior, assoc);
-
         lr1->iterms();
-
         lr1->makeACTIONGOTO();
-        lr1->printACTIONGOTO();
-
+        //lr1->printACTIONGOTO();
     }
 
     map<string, int> num2num;
@@ -200,6 +196,7 @@ public:
 
         vector<char> symbolStack;
         vector<int> stateStack;
+        vector<int> numStack;
         vector<std::pair<string, int>> inputLex;
 
         stateStack.push_back(state);
@@ -226,6 +223,7 @@ public:
             } else {
                 term = s.first;
             }
+            numStack.push_back(s.second);
 
             int i = actionTerm[term];
             string action = res_action[state][i];
@@ -236,6 +234,7 @@ public:
                  << " and action " << action << endl;
             stackPrint(symbolStack);
             stackPrint(stateStack);
+            stackPrint(numStack);
 
             if (action.empty()) {
                 cout << "Can't make next step" << endl;
@@ -257,27 +256,50 @@ public:
 
                 expr->printSigleExpr();
                 cout << "The reduce action is " << action << endl;
-                cout << "Current is" << expr->func << endl;
+                cout << "Current is" << right.size() << " " << expr->func << endl;
+                vector<int> tmp_num_vec(right.size());
+                auto numIt = numStack.end();
+                int tmp_num_it = right.size() - 1;
+                numIt --;
+
                 for(auto it : right) {
 
                     auto symbolIt = symbolStack.end();
                     auto stateIt = stateStack.end();
                     symbolIt--;
 
+                    if (!expr->func.empty()) {
+                        cout << "Erase " << *numIt << endl;
+                        numStack.erase(numIt);
+                        numIt --;
+                        tmp_num_vec[tmp_num_it] = *numIt;
+                        tmp_num_it -= 1;
+                    }
+
                     char s = *symbolIt;
-                    cout << "Stack top is " << s << endl;
+                    //cout << "Stack top is " << s << endl;
                     if (it == s) {
-                        cout << "ok" << endl;
+                        //cout << "ok" << endl;
                         symbolStack.erase(symbolIt);
                         stateIt --;
                         stateStack.erase(stateIt);
                         stateIt --;
                         state = *stateIt;
 
+//                        numIt--;
+                        //numStack.erase(numIt);
+
                     } else {
                         cout << "Error in stack" << endl;
                         exit(-1);
                     }
+                }
+                stackPrint(numStack);
+                if (!expr->func.empty()) {
+                    int result =  parseFunc(expr->func, tmp_num_vec);
+                    numStack.erase(numIt);
+                    numStack.push_back(result);
+                    numStack.push_back(result);
                 }
 
                 int i = gotoNonTerm[expr->left];
@@ -288,6 +310,10 @@ public:
                 symbolStack.push_back(expr->left[0]);
                 lexItem --;
 
+                numIt = numStack.end();
+                numIt --;
+                numStack.erase(numIt);
+
 
             } else if (action == "acc") {
                 cout << "Accept" << endl;
@@ -296,6 +322,30 @@ public:
 
 
         }
+    }
+
+    int parseFunc(string func, vector<int>& data) {
+        cout << "The func is " << func << endl;
+
+        stackPrint(data);
+        int ret = 0;
+
+        if (func == "{$$=$1+$3;}") {
+            ret = data[0] + data[2];
+        } else if (func == "{$$=$1-$3;}") {
+            ret = data[0] - data[2];
+        } else if (func == "{$$=$1*$3;}") {
+            ret = data[0] * data[2];
+        } else if (func == "{$$=$1/$3;}") {
+            ret = data[0] / data[2];
+        } else if (func == "{$$=$2;}") {
+            ret = data[1];
+        } else {
+            cout << "Error in " << func << endl;
+            exit(-1);
+        }
+
+        return ret;
     }
 
     void stackPrint(vector<char> &stack) {

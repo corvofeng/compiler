@@ -148,14 +148,13 @@ private:
 
     void insert(std::string left, std::string right, std::string func) {
         if (left2Expr.find(left) != left2Expr.end()) {
-            left2Expr.at(left)->insert(right);
+            left2Expr.at(left)->insert(right, func);
             return;
         }
 
         Expression *pExpr = new Expression(left);
         cout << "Insert func is " << func << endl;
-        pExpr->func = func;
-        pExpr->insert(right);
+        pExpr->insert(right, func);
         left2Expr.insert(std::make_pair(left, pExpr));
         pExprVec.push_back(pExpr);
         isOver[pExpr] = false;
