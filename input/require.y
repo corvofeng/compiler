@@ -30,7 +30,7 @@ void yyerror(char *s)
 %head  expr
 
 %left + -
-%left * /
+%left * +
 %right UNINUS
 
 %!

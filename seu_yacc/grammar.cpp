@@ -13,6 +13,71 @@
 #include "grammar.h"
 
 
+Grammar::Grammar(std::map<string, string>& exprFunc, string nonTermHead) {
+    for(auto it: exprFunc) {
+        string expr = it.first;
+        string func = it.second;
+
+        expr.erase(std::remove_if(expr.begin(), expr.end(),
+                                [](char c){return (c == '\r' || c == '\t' || c == ' ');}),
+                                expr.end());
+        string& s = expr;
+        int j, len = s.size();
+        for (j = 0; j < len; ++j) {
+            if (s[j] == '-') break;
+        }
+        string left = s.substr(0, j);
+        this->nonTerm.insert(left);
+        j += 2;
+        string right = s.substr(j, len - j);
+        for (auto it: right) {
+            string s;
+            s += it;
+            if (isupper(it)) {
+                this->nonTerm.insert(s);
+            } else {
+                this->term.insert(s);
+            }
+        }
+        this->insert(left, right, func);
+
+    }
+    this->nonTermHead = nonTermHead;
+}
+
+Grammar::Grammar(string* expr, int size, string nonTermHead) {
+    for (int i = 0; i < size; ++i) {
+        // 消除空格
+        expr[i].erase(std::remove_if(expr[i].begin(), expr[i].end(),
+                                [](char c){return (c == '\r' || c == '\t' || c == ' ');}),
+                                expr[i].end());
+    }
+
+    for (int i = 0; i < size; ++i) {
+        std::string s = expr[i];
+        int j, len = s.size();
+        for (j = 0; j < len; ++j) {
+            if (s[j] == '-') break;
+        }
+        string left = s.substr(0, j);
+        this->nonTerm.insert(left);
+        j += 2;
+        string right = s.substr(j, len - j);
+        for (auto it: right) {
+            string s;
+            s += it;
+            if (isupper(it)) {
+                this->nonTerm.insert(s);
+            } else {
+                this->term.insert(s);
+            }
+        }
+        this->insert(left, right);
+    }
+    this->nonTermHead = nonTermHead;
+}
+
+
 void Grammar::dfs(Expression* pExpr) {
     if (isOver.at(pExpr) == true) {
         //cout << pExpr->left << "  ok" << endl;

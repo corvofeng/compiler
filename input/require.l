@@ -104,8 +104,9 @@ digit=isDigit
     }
 }
 //[\+\-]?[\d]+([\.][\d]*)?([Ee][+-]?[\d]+)?
+// 不支持负数(-)?
 %$
-(-)?{digit}+(%.{digit}*)?((E|e)(%+|-)?{digit}+)? {
+{digit}+(%.{digit}*)?((E|e)(%+|-)?{digit}+)? {
     printf("<$NUM,%s>\n", SYLEX_TEXT);
 }
 %$

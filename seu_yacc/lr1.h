@@ -19,6 +19,11 @@
 
 using std::vector;
 
+/**
+ * 整个LR1语法分析类:
+ *   承载了包括语法解析, 状态构建, 状态去重, 状态转移, Action表与Goto表的构建
+ * @brief The LR1 class
+ */
 class LR1
 {
 public:
@@ -45,52 +50,30 @@ public:
     map<string, int> actionTerm;
     map<string, int> gotoNonTerm;
 
-    LRState* standardState;
+    LRState* standardState = NULL;
 
-
+    /**
+     *   构造函数族, 有些构造函数会通过产生式进行语法构建, 所不同的就是他们的参数不同
+     *  有些构造函数只有产生式, 有些有优先级与结合性, 还有的产生式中存有规约时的相应动作
+     * @brief LR1
+     */
     LR1() {}
 
-    LR1(string* expr, int size, string nonTermHead) {
-        this->grammar = new Grammar(expr, size, nonTermHead);
-        this->grammar->makeFirst();     // 产生first集合
-
-        this->grammar->printFirst();
-
-        standardState = LRState::getStandardState(this->grammar);
-    }
+    LR1(string* expr, int size, string nonTermHead);
 
     LR1(string *expr, int size, string nonTermHead,
-          map<string, string> prior, map<string, int> assoc) {
-
-        this->grammar = new Grammar(expr, size, nonTermHead);
-        this->grammar->makeFirst();     // 产生first集合
-
-        //this->grammar->printFirst();
-
-        standardState = LRState::getStandardState(this->grammar);
-
-        this->prior = prior;
-        this->assoc = assoc;
-    }
+         map<string, string> prior, map<string, int> assoc);
 
     LR1(map<string, string>& exprFunc, string nonTermHead,
-        map<string, string>prior, map<string, int> assoc) {
-
-
-        this->grammar = new Grammar(exprFunc, nonTermHead);
-        this->grammar->makeFirst();     // 产生first集合
-
-        standardState = LRState::getStandardState(this->grammar);
-
-        this->prior = prior;
-        this->assoc = assoc;
-    }
+        map<string, string>prior, map<string, int> assoc);
 
     ~LR1() {
         for(auto it : lrStateVec) {
             delete it;
         }
         lrStateVec.clear();
+        res_action.clear();
+        res_goto.clear();
 
         LRState::deleteStandardState();
         if (grammar) {

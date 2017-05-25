@@ -66,13 +66,24 @@ public:
         ((std::ifstream*)in)->close();
         delete this->in;
 
+        if (lr1) {
+            delete lr1;
+            lr1 = NULL;
+        }
+
         if (this->out == &std::cout)
             return;
         ((std::ofstream*)out)->close();
         delete this->out;
     }
 
+
+    /**
+     * 进行Yacc文件解析
+     * @brief scanner
+     */
     void scanner() {
+
         printf("In Yacc Scanner\n");
 
         int state = 0;
@@ -148,6 +159,10 @@ public:
         }
     }
 
+    /**
+     * 构建预测分析表
+     * @brief buildTable
+     */
     void buildTable() {
 
         for (auto it: expr2func) {
@@ -162,37 +177,14 @@ public:
 
     }
 
-    /*
-    void outCodeTop() {
-        std::ostream &o = (*out);
-        o<<"#include <stdio.h>"<<endl;
-        o<<"#include <stdlib.h>"<<endl;
-        o<<"#include <string.h>"<<endl;
-        o<<endl;
-        o<<"#define SYLEX_MAXSIZE_TEXT 120"<<endl;
-        o<<"#define SYLEX_MAXSIZE_BUFF 1024"<<endl;
-        o<<endl;
-        o<<"char SYLEX_FILE_NAME[100];"<<endl;
-        o<<"char SYLEX_OUT_FILE_NAME[100];"<<endl;
-        o<<"int SYLEX_LINE = 0;"<<endl;
-        o<<"int SYLEX_STATE = 0;"<<endl;
-        o<<"int SYLEX_TEXT_LEN = 0;"<<endl;
-        o<<"char SYLEX_TEXT[SYLEX_MAXSIZE_TEXT];"<<endl;
-        o<<"char SYLEX_BUFF[SYLEX_MAXSIZE_BUFF];"<<endl;
-        o<<endl;
-    }
-
-    void outCodeMid() {
-
-    }
-
-    void outCodeBottom() {
-
-    }
-    */
-
     map<string, int> num2num;
 
+    /**
+     * 使用预测分析表进行分析指定文件
+     *
+     * @brief parse
+     * @param filename
+     */
     void parse(string filename) {
         ifstream fin(filename);
         std::istream& input = fin;
@@ -228,7 +220,6 @@ public:
 
             std::pair<string, int>& s = *lexItem;
 
-            cout << "Current state is " << state << endl;
             string term;
             if (token2ch.find(s.first) != token2ch.end()) {
                 term = token2ch[s.first];
@@ -239,26 +230,35 @@ public:
             int i = actionTerm[term];
             string action = res_action[state][i];
 
-            //cout << "--" << state << "-----" << term <<  "--The action is " << action << endl;
+            cout << "Current state is " << state
+                 << " with term " << term
+                 << " and i " << i
+                 << " and action " << action << endl;
+            stackPrint(symbolStack);
+            stackPrint(stateStack);
+
+            if (action.empty()) {
+                cout << "Can't make next step" << endl;
+                exit(-1);
+            }
+
             if (action[0] == 's') {
                 symbolStack.push_back(term[0]);
-                state = action[1] - 48;
+                state = std::stoi(action.substr(1));
                 stateStack.push_back(state);
                 //cout << "The shift action is " << action << " " << state << endl;
 
             } else if (action[0] == 'r') { // reduce
 
-                int reduceNum = action[1] - 48;
+                int reduceNum  = std::stoi(action.substr(1));
                 SingleExpress* expr = standardState->singleExprVec.at(reduceNum);
                 string right = expr->right;
                 std::reverse(right.begin(), right.end());
 
                 expr->printSigleExpr();
-                //cout << "The reduce action is " << action << " " << state << endl;
-                cout << "current is" << expr->func << endl;
+                cout << "The reduce action is " << action << endl;
+                cout << "Current is" << expr->func << endl;
                 for(auto it : right) {
-                    stackPrint(symbolStack);
-                    stackPrint(stateStack);
 
                     auto symbolIt = symbolStack.end();
                     auto stateIt = stateStack.end();
@@ -287,6 +287,8 @@ public:
                 stateStack.push_back(state);
                 symbolStack.push_back(expr->left[0]);
                 lexItem --;
+
+
             } else if (action == "acc") {
                 cout << "Accept" << endl;
                 break;
@@ -294,8 +296,6 @@ public:
 
 
         }
-
-
     }
 
     void stackPrint(vector<char> &stack) {
@@ -317,8 +317,13 @@ public:
     }
 
 
-
-
+    /**
+     * lex 输出结果的解析
+     * 解析例如 <$NUM, 9>
+     * @brief lexSplit
+     * @param str
+     * @return
+     */
     std::pair<string, int> lexSplit(string str) {
 
         int start = 1;
@@ -378,12 +383,12 @@ public:
             input >> tmp;
             string r, l;
             input >> l;
-            input >> r;
-            cout << "l:" << l << " r:" << r << endl;
             assoc.insert(std::make_pair(l, 1));
-            assoc.insert(std::make_pair(r, 1));
-
-            prior.insert(std::make_pair(l, r));
+            while (input >> r) {
+                cout << "l:" << l << " r:" << r << endl;
+                assoc.insert(std::make_pair(r, 1));
+                prior.insert(std::make_pair(l, r));
+            }
         } else if (declare.find("%right") != string::npos) {
             stringstream input(declare);
             string tmp;

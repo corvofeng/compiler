@@ -28,7 +28,7 @@ LRState* LRState::getStandardState(Grammar *grammer) {
         Expression *expr = it;
         string left = expr->left;
         for (auto right: expr->right) {
-            lrState->addCoreExpr(left, right, 0, '?', expr->func);
+            lrState->addCoreExpr(left, right, 0, '?', expr->right2func[right]);
         }
     }
     nonTermHead = grammer->nonTermHead;

@@ -18,8 +18,10 @@
 
 /**
  *   该类记录了LR1状态转换图中的每一个状态, 对于各种状态信息来说, 我们需要有标准状态来与其进行
- * 对比, 此类拥有静态变量lrStateStandard, 在调用此类时, 首先进行getStandardState, 将标准
- * 状态进行记录
+ * 对比,
+ *   此类拥有静态变量lrStateStandard, 在调用此类时, 首先进行getStandardState, 将标准
+ * 状态进行记录, 在结束使用后, 请主动调用deleteStandardState
+ *
  * @brief The LRState class
  */
 class LRState {
@@ -32,6 +34,8 @@ public:
     std::set<char> maybeNext;
 
     string termAll;
+
+    vector<SingleExpress*> singleExprVec;   // 存储所有的产生式, 方便最后内存的释放
 
     /**
      *
@@ -50,7 +54,6 @@ public:
         }
     }
 
-    vector<SingleExpress*> singleExprVec;   // 存储所有的产生式, 方便最后内存的释放
 
     /**
      *  对于普通的状态, 该变量表示核心的expr

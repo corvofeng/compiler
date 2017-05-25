@@ -13,6 +13,44 @@
 #include "lr1.h"
 #include "lrstate.h"
 
+LR1::LR1(string* expr, int size, string nonTermHead) {
+    this->grammar = new Grammar(expr, size, nonTermHead);
+    this->grammar->makeFirst();     // 产生first集合
+
+    //this->grammar->printFirst();
+
+    standardState = LRState::getStandardState(this->grammar);
+}
+
+LR1::LR1(string *expr, int size, string nonTermHead,
+      map<string, string> prior, map<string, int> assoc) {
+
+    this->grammar = new Grammar(expr, size, nonTermHead);
+    this->grammar->makeFirst();     // 产生first集合
+
+    //this->grammar->printFirst();
+
+    standardState = LRState::getStandardState(this->grammar);
+
+    this->prior = prior;
+    this->assoc = assoc;
+}
+
+LR1::LR1(map<string, string>& exprFunc, string nonTermHead,
+    map<string, string>prior, map<string, int> assoc) {
+
+
+    this->grammar = new Grammar(exprFunc, nonTermHead);
+    this->grammar->makeFirst();     // 产生first集合
+
+    standardState = LRState::getStandardState(this->grammar);
+
+    this->prior = prior;
+    this->assoc = assoc;
+}
+
+
+
 void LR1::iterms() {
     // 构建初始状态
     LRState *start = new LRState();

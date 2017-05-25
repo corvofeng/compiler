@@ -108,7 +108,7 @@ void yacc_test()
     Yacc *yacc = new Yacc("../input/require.y", "../input/output_yacc.c");
     yacc->scanner();
     yacc->buildTable();
-    yacc->parse("../input/lex.out");
+    yacc->parse("../input/lexout");
     delete yacc;
 
     //Grammar grammar(expr, 8, "E");

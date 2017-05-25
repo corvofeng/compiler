@@ -40,73 +40,14 @@ public:
     set<string> term;            // 保存终结符的集合a, b, +, i ...
     set<string> nonTerm;         // 保存非终结符的集合(一定为大写字母) S, A, B ..
 
-
     Grammar() {}
 
-    Grammar(std::map<string, string>& exprFunc, string nonTermHead) {
-        for(auto it: exprFunc) {
-            string expr = it.first;
-            string func = it.second;
+    /**
+     * 该构造函数允许表达式与规约时的函数共同传入
+     */
+    Grammar(std::map<string, string>& exprFunc, string nonTermHead);
 
-            expr.erase(std::remove_if(expr.begin(), expr.end(),
-                                    [](char c){return (c == '\r' || c == '\t' || c == ' ');}),
-                                    expr.end());
-            string& s = expr;
-            int j, len = s.size();
-            for (j = 0; j < len; ++j) {
-                if (s[j] == '-') break;
-            }
-            string left = s.substr(0, j);
-            this->nonTerm.insert(left);
-            j += 2;
-            string right = s.substr(j, len - j);
-            for (auto it: right) {
-                string s;
-                s += it;
-                if (isupper(it)) {
-                    this->nonTerm.insert(s);
-                } else {
-                    this->term.insert(s);
-                }
-            }
-            this->insert(left, right, func);
-
-        }
-        this->nonTermHead = nonTermHead;
-    }
-
-    Grammar(string* expr, int size, string nonTermHead) {
-        for (int i = 0; i < size; ++i) {
-            // 消除空格
-            expr[i].erase(std::remove_if(expr[i].begin(), expr[i].end(),
-                                    [](char c){return (c == '\r' || c == '\t' || c == ' ');}),
-                                    expr[i].end());
-        //    std::cout << expr[i] << std::endl;
-        }
-
-        for (int i = 0; i < size; ++i) {
-            std::string s = expr[i];
-            int j, len = s.size();
-            for (j = 0; j < len; ++j) {
-                if (s[j] == '-') break;
-            }
-            string left = s.substr(0, j);
-            this->nonTerm.insert(left);
-            j += 2;
-            string right = s.substr(j, len - j);
-            for (auto it: right) {
-                string s;
-                s += it;
-                if (isupper(it)) {
-                    this->nonTerm.insert(s);
-                } else {
-                    this->term.insert(s);
-                }
-            }
-            this->insert(left, right);
-        }
-        this->nonTermHead = nonTermHead;
-    }
+    Grammar(string* expr, int size, string nonTermHead);
 
     string getNonTermHead() {
         return this->nonTermHead;
@@ -125,6 +66,35 @@ public:
             expr->printExpr();
         }
     }
+
+    void printFirst() {
+        cout << "\nprint first : " << endl;
+        for(auto it: this->first) {
+            const string& left = it.first;
+            set<char> &chSet = it.second;
+
+            cout << left << ": ";
+            for (auto ch : chSet){
+                cout << ch << " ";
+            }
+            cout << endl;
+        }
+    }
+
+
+    /**
+     * 获取该文法的First集合, 通过dfs函就数进行计算
+     * @brief makeFirst
+     */
+    void makeFirst() {
+        // 此处虽为循环调用, 但实际上执行时, 很多情况会直接返回, 复杂度并不很高
+        for (auto it : pExprVec) {
+            Expression *pExpr = it;
+            dfs(pExpr);
+        }
+    }
+private:
+    map<Expression*, bool> isOver;
 
     /**
      * 此代码并非本人书写, 其中主要参考了如下代码:
@@ -161,35 +131,6 @@ public:
      * @param pExpr
      */
     void dfs(Expression* pExpr);
-
-    void printFirst() {
-        cout << "\nprint first : " << endl;
-        for(auto it: this->first) {
-            const string& left = it.first;
-            set<char> &chSet = it.second;
-
-            cout << left << ": ";
-            for (auto ch : chSet){
-                cout << ch << " ";
-            }
-            cout << endl;
-        }
-    }
-
-    map<Expression*, bool> isOver;
-
-    /**
-     * 获取该文法的First集合, 通过dfs函就数进行计算
-     * @brief makeFirst
-     */
-    void makeFirst() {
-        // 此处虽为循环调用, 但实际上执行时, 很多情况会直接返回, 复杂度并不很高
-        for (auto it : pExprVec) {
-            Expression *pExpr = it;
-            dfs(pExpr);
-        }
-    }
-
 
     void insert(string left, string right) {
 
