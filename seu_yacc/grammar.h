@@ -153,7 +153,6 @@ private:
         }
 
         Expression *pExpr = new Expression(left);
-        cout << "Insert func is " << func << endl;
         pExpr->insert(right, func);
         left2Expr.insert(std::make_pair(left, pExpr));
         pExprVec.push_back(pExpr);

@@ -20,6 +20,7 @@
 #include <vector>
 #include <stack>
 #include "lr1.h"
+#include <iomanip>
 
 
 using std::string;
@@ -223,18 +224,34 @@ public:
             } else {
                 term = s.first;
             }
-            numStack.push_back(s.second);
 
             int i = actionTerm[term];
             string action = res_action[state][i];
 
+            /*
             cout << "Current state is " << state
                  << " with term " << term
                  << " and i " << i
                  << " and action " << action << endl;
+
             stackPrint(symbolStack);
             stackPrint(stateStack);
             stackPrint(numStack);
+            */
+
+            string actionPrint;
+            if (action[0] == 's') {
+                actionPrint = action;
+            } else if (action[0] == 'r') {
+                int reduceNum  = std::stoi(action.substr(1));
+                SingleExpress* expr = standardState->singleExprVec.at(reduceNum);
+                string right = expr->right;
+                actionPrint = expr->left + "->" + expr->right;
+            } else if (action == "acc") {
+                actionPrint = "Accept";
+            }
+
+            stackPrint(symbolStack, stateStack, numStack, actionPrint);
 
             if (action.empty()) {
                 cout << "Can't make next step" << endl;
@@ -245,8 +262,7 @@ public:
                 symbolStack.push_back(term[0]);
                 state = std::stoi(action.substr(1));
                 stateStack.push_back(state);
-                //cout << "The shift action is " << action << " " << state << endl;
-
+                numStack.push_back(s.second);
             } else if (action[0] == 'r') { // reduce
 
                 int reduceNum  = std::stoi(action.substr(1));
@@ -254,9 +270,9 @@ public:
                 string right = expr->right;
                 std::reverse(right.begin(), right.end());
 
-                expr->printSigleExpr();
-                cout << "The reduce action is " << action << endl;
-                cout << "Current is" << right.size() << " " << expr->func << endl;
+                //expr->printSigleExpr();
+                //cout << "The reduce action is " << action << endl;
+                //cout << "Current is" << right.size() << " " << expr->func << endl;
                 vector<int> tmp_num_vec(right.size());
                 auto numIt = numStack.end();
                 int tmp_num_it = right.size() - 1;
@@ -269,10 +285,10 @@ public:
                     symbolIt--;
 
                     if (!expr->func.empty()) {
-                        cout << "Erase " << *numIt << endl;
+                 //       cout << "Erase " << *numIt << endl;
+                        tmp_num_vec[tmp_num_it] = *numIt;
                         numStack.erase(numIt);
                         numIt --;
-                        tmp_num_vec[tmp_num_it] = *numIt;
                         tmp_num_it -= 1;
                     }
 
@@ -286,19 +302,13 @@ public:
                         stateIt --;
                         state = *stateIt;
 
-//                        numIt--;
-                        //numStack.erase(numIt);
-
                     } else {
                         cout << "Error in stack" << endl;
                         exit(-1);
                     }
                 }
-                stackPrint(numStack);
                 if (!expr->func.empty()) {
                     int result =  parseFunc(expr->func, tmp_num_vec);
-                    numStack.erase(numIt);
-                    numStack.push_back(result);
                     numStack.push_back(result);
                 }
 
@@ -310,11 +320,6 @@ public:
                 symbolStack.push_back(expr->left[0]);
                 lexItem --;
 
-                numIt = numStack.end();
-                numIt --;
-                numStack.erase(numIt);
-
-
             } else if (action == "acc") {
                 cout << "Accept" << endl;
                 break;
@@ -325,10 +330,12 @@ public:
     }
 
     int parseFunc(string func, vector<int>& data) {
-        cout << "The func is " << func << endl;
+//        cout << "The func is " << func << endl;
 
-        stackPrint(data);
+//       stackPrint(data);
         int ret = 0;
+
+//        exit(-1);
 
         if (func == "{$$=$1+$3;}") {
             ret = data[0] + data[2];
@@ -366,10 +373,55 @@ public:
         cout << "-------stack-----" << endl;
     }
 
+    /**
+     * 进行结果展示, 输出类似如下形式
+     * 符号栈             状态栈             实际计算栈         当前动作
+     * (                 0  1               0                s6
+     * ( a               0  1  6            0  23            A->a
+     * @brief stackPrint
+     * @param symbolStack
+     * @param stateStack
+     * @param numStack
+     * @param action
+     */
+    void stackPrint(vector<char> &symbolStack, vector<int>& stateStack, vector<int> numStack, string action) {
+
+        int max_column = 8;
+
+        int i = 0;
+        for(auto it : symbolStack) {
+            cout << it << " ";
+            i ++;
+        }
+        while(i++ < max_column)
+            cout << "  ";
+
+        i = 0;
+        for (auto it: stateStack) {
+            cout << std::setw(3) << it ;
+            i ++;
+        }
+        while(i++ < max_column)
+            cout << "   ";
+
+        i = 0;
+        for (auto it: numStack) {
+            cout << std::setw(4) << it;
+            i ++;
+        }
+
+        while(i++ < max_column)
+            cout << "    ";
+
+        cout << action;
+        cout << endl;
+
+    }
 
     /**
      * lex 输出结果的解析
-     * 解析例如 <$NUM, 9>
+     * 解析例如
+     *      <$NUM, 9>  --> NUM 9
      * @brief lexSplit
      * @param str
      * @return
@@ -422,7 +474,7 @@ public:
             string token;
             input >> token;
             while(input>>token) {
-                cout << "The token is " << token << endl;
+//                cout << "The token is " << token << endl;
                 token2ch.insert(std::make_pair(token, ch));
                 ch ++;
             }
