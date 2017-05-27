@@ -83,97 +83,27 @@ public:
      * 进行Yacc文件解析
      * @brief scanner
      */
-    void scanner() {
-
-        printf("In Yacc Scanner\n");
-
-        int state = 0;
-        int line = 0;
-        string str;
-        string outStr;
-        std::istream& input = *in;
-        std::ostream& output = *out;
-
-        while(!input.eof())
-        {
-            line ++;
-            switch (state) {
-            case 0:
-                getline(input, str);
-                if (str.compare(0, 2, "%{") == 0) {
-                    state = 1;
-                    output << "//%{ start" << endl;
-                } else if (str.compare(0, 2, "%!") == 0) {
-                    state = 2;
-                    output << "//%! start" << endl;
-                } else if (str.compare(0, 2, "%%") == 0) {
-                    state = 3;
-                    outStr.clear();
-                    output << "//%% start" << endl;
-                }else if (str.compare(0, 2, "//") == 0) {
-                    state = 4;
-                } else {
-                    state = 0;
-                    if (!str.empty()) {
-                        printError(line, str + "error");
-                    }
-                }
-                break;
-            case 1: {
-                getline(input, str);
-                if (str.compare(0, 2, "%}") == 0) {
-                    state = 0;
-                    output << "//%} end" << endl;
-                } else {
-                    output << str << endl;
-                }
-
-                break;
-            }
-            case 2: {
-                getline(input, str);
-                if (str.compare(0, 2, "%!") == 0) {
-                    output << "//%! end" << endl;
-                    state = 0;
-                } else {
-                    getDeclare(line, str);
-                }
-                break;
-            }
-            case 3: {
-                getline(input, str);
-                if (str.compare(0, 2, "%%") == 0) {
-                    state = 0;
-                    getGrammar(line, outStr);
-                    output << "//%% end" << endl;
-                } else if (str.compare(0, 2, "%$") == 0) {
-                    getGrammar(line, outStr);
-                    outStr.clear();
-                } else
-                    outStr += str;
-                break;
-            }
-            default:
-                printError(line, "结构不完整");
-                break;
-            }
-        }
-    }
+    void scanner();
 
     /**
      * 构建预测分析表
      * @brief buildTable
      */
     void buildTable() {
+        /*
         for (auto it: expr2func) {
             cout << it.first << ": " << it.second << endl;
         }
+        */
         lr1 = new LR1(expr2func, "A", prior, assoc);
         lr1->iterms();
         lr1->makeACTIONGOTO();
         //lr1->printACTIONGOTO();
     }
 
+    /**
+     * 记录终结符所对应的值, 由于我们只针对计算式例如a+b*c进行了分析, 所以只记录了int型数据
+     */
     map<string, int> num2num;
 
     /**
@@ -182,177 +112,105 @@ public:
      * @brief parse
      * @param filename
      */
-    void parse(string filename) {
-        ifstream fin(filename);
-        std::istream& input = fin;
-        int line = 0;
-        string str;
+    void parse(string filename);
 
-        map<string, int>& actionTerm = this->lr1->actionTerm;
-        map<string, int>& gotoNonTerm = this->lr1->gotoNonTerm;
-        vector<vector<string>>& res_action = this->lr1->res_action;
-        vector<vector<int>>& res_goto = this->lr1->res_goto;
-        LRState* standardState = this->lr1->standardState;
-        int state = 0;
+    /**
+     * 规约完成时将会调用该函数, 当我们输入func={$$=$1+$3;}, data=[23, 0, 16]
+     * 将会计算 23 + 16
+     * 返回 39
+     *
+     * @brief parseFunc
+     */
+    int parseFunc(string func, vector<int>& data);
 
-        vector<char> symbolStack;
-        vector<int> stateStack;
-        vector<int> numStack;
-        vector<std::pair<string, int>> inputLex;
+    /**
+     * 进行结果展示, 输出类似如下形式
+     * 符号栈             状态栈             实际计算栈         当前动作
+     * (                 0  1               0                s6
+     * ( a               0  1  6            0  23            A->a
+     * @brief stackPrint
+     */
+    void stackPrint(vector<char> &symbolStack,
+                    vector<int>& stateStack,
+                    vector<int> numStack,
+                    string action);
 
-        stateStack.push_back(state);
-        while(!input.eof()) {
-            line ++;
-            getline(input, str);
-            //cout << "In " << line << ": " << str << endl;
-            //cout << "Current state is " << state << endl;
-            if (!str.empty()) {
-                std::pair<string, int> s = lexSplit(str);
-                inputLex.push_back(s);
-            }
+    /**
+     * lex 输出结果的解析
+     * 解析例如
+     *      <$NUM, 9>  --> NUM 9
+     * @brief lexSplit
+     * @param str
+     * @return
+     */
+    std::pair<string, int> lexSplit(string str);
 
-        }
-        inputLex.push_back(std::make_pair("$", 0));
+    map<string, string> expr2func;   // 保存表达式所对应的函数操作
+    map<string, char> token2ch;
+    map<string, char> gram2ch;
 
-        for (auto lexItem = inputLex.begin(); lexItem != inputLex.end(); lexItem++) {
+    map<string, string> prior;   // 记录优先级
+    map<string, int> assoc;      // 记录结合性
 
-            std::pair<string, int>& s = *lexItem;
+    /**
+     * 解析每一行, 记录token(也就是可能出现的终结符), 以及优先级与结合性
+     * @brief getDeclare
+     */
+    void getDeclare(int line, string declare);
 
-            string term;
-            if (token2ch.find(s.first) != token2ch.end()) {
-                term = token2ch[s.first];
-            } else {
-                term = s.first;
-            }
+    /**
+     * 获取文法, 这里一组文法被直接以一整行输入, 例如
+     * expr:expr'+'expr{$$=$1+$3;}|expr'-'expr{$$=$1-$3;}|expr'*'expr{$$=$1*$3;}|expr'/'expr{$$=$1/$3;}|'('expr')'{$$=$2;}|NUM|;
+     *
+     *   由于需要解析成我们的LR1支持的形式, 所以, 此处进行了单个产生式以及其规约函数的分离
+     *  1.分离出开始符号expr
+     *  2.对于每一个表达式的产生式, 例如expr'+'expr{$$=$1+$3;}, 进行makeSplitExpr操作.
+     *   产生类似 <A+A, {$$=$1+$3;}>的键值对, 其中A代表非终结符expr, 转换细节请查看函数实现
+     *  3. 对于每一个产生式的类似如上的键值对, 转换为LR1可识别的输入形式, 最终保存在
+     *    expr2func这个变量中, 保存键值对形式如 <A->A+A, {$$=$1+$3;}>
+     *
+     * 函数主要调用了下方的split族函数, 有兴趣可自行查看
+     *
+     * @brief getGrammar
+     */
+    void getGrammar(int line, string grammar);
 
-            int i = actionTerm[term];
-            string action = res_action[state][i];
+    /**
+     * 详细过程已在上面进行描述, 仅在这里列出输入输出
+     * 输入:
+     * :expr'+'expr{$$=$1+$3;}
+     * 输出:
+     *  <A+A, {$$=$1+$3;}>
+     * @brief makeSplitExpr
+     */
+    std::pair<string, string> makeSplitExpr(string& head, string& expr, char& ch);
 
-            /*
-            cout << "Current state is " << state
-                 << " with term " << term
-                 << " and i " << i
-                 << " and action " << action << endl;
+    /**
+     * 输入:
+     *      :expr'+'expr{$$=$1+$3;}
+     * 输出:
+     *      <:expr'+'expr, {$$=$1+$3;}>
+     *
+     * @brief getExprAndFunc
+     */
+    std::pair<string, string> getExprAndFunc(string str);
 
-            stackPrint(symbolStack);
-            stackPrint(stateStack);
-            stackPrint(numStack);
-            */
+    /**
+     * 输入:
+     *      :expr'+'expr{$$=$1+$3;}|expr'-'expr{$$=$1-$3;}|expr'*'expr{$$=$1*$3;}
+     * 输出(数组):
+     *      :expr'+'expr{$$=$1+$3;}
+     *      |expr'-'expr{$$=$1-$3;}
+     *      |expr'*'expr{$$=$1*$3;}
+     *
+     * @brief split
+     */
+    std::vector<std::string> split(const  std::string& s, const std::string& delim);
 
-            string actionPrint;
-            if (action[0] == 's') {
-                actionPrint = action;
-            } else if (action[0] == 'r') {
-                int reduceNum  = std::stoi(action.substr(1));
-                SingleExpress* expr = standardState->singleExprVec.at(reduceNum);
-                string right = expr->right;
-                actionPrint = expr->left + "->" + expr->right;
-            } else if (action == "acc") {
-                actionPrint = "Accept";
-            }
-
-            stackPrint(symbolStack, stateStack, numStack, actionPrint);
-
-            if (action.empty()) {
-                cout << "Can't make next step" << endl;
-                exit(-1);
-            }
-
-            if (action[0] == 's') {
-                symbolStack.push_back(term[0]);
-                state = std::stoi(action.substr(1));
-                stateStack.push_back(state);
-                numStack.push_back(s.second);
-            } else if (action[0] == 'r') { // reduce
-
-                int reduceNum  = std::stoi(action.substr(1));
-                SingleExpress* expr = standardState->singleExprVec.at(reduceNum);
-                string right = expr->right;
-                std::reverse(right.begin(), right.end());
-
-                //expr->printSigleExpr();
-                //cout << "The reduce action is " << action << endl;
-                //cout << "Current is" << right.size() << " " << expr->func << endl;
-                vector<int> tmp_num_vec(right.size());
-                auto numIt = numStack.end();
-                int tmp_num_it = right.size() - 1;
-                numIt --;
-
-                for(auto it : right) {
-
-                    auto symbolIt = symbolStack.end();
-                    auto stateIt = stateStack.end();
-                    symbolIt--;
-
-                    if (!expr->func.empty()) {
-                 //       cout << "Erase " << *numIt << endl;
-                        tmp_num_vec[tmp_num_it] = *numIt;
-                        numStack.erase(numIt);
-                        numIt --;
-                        tmp_num_it -= 1;
-                    }
-
-                    char s = *symbolIt;
-                    //cout << "Stack top is " << s << endl;
-                    if (it == s) {
-                        //cout << "ok" << endl;
-                        symbolStack.erase(symbolIt);
-                        stateIt --;
-                        stateStack.erase(stateIt);
-                        stateIt --;
-                        state = *stateIt;
-
-                    } else {
-                        cout << "Error in stack" << endl;
-                        exit(-1);
-                    }
-                }
-                if (!expr->func.empty()) {
-                    int result =  parseFunc(expr->func, tmp_num_vec);
-                    numStack.push_back(result);
-                }
-
-                int i = gotoNonTerm[expr->left];
-                //cout << "i = " << i << "old state is " << state << endl;
-                state = res_goto[state][i];
-                //cout << "refresh state to " << tmp << endl;
-                stateStack.push_back(state);
-                symbolStack.push_back(expr->left[0]);
-                lexItem --;
-
-            } else if (action == "acc") {
-                cout << "Accept" << endl;
-                break;
-            }
-
-
-        }
-    }
-
-    int parseFunc(string func, vector<int>& data) {
-//        cout << "The func is " << func << endl;
-
-//       stackPrint(data);
-        int ret = 0;
-
-//        exit(-1);
-
-        if (func == "{$$=$1+$3;}") {
-            ret = data[0] + data[2];
-        } else if (func == "{$$=$1-$3;}") {
-            ret = data[0] - data[2];
-        } else if (func == "{$$=$1*$3;}") {
-            ret = data[0] * data[2];
-        } else if (func == "{$$=$1/$3;}") {
-            ret = data[0] / data[2];
-        } else if (func == "{$$=$2;}") {
-            ret = data[1];
-        } else {
-            cout << "Error in " << func << endl;
-            exit(-1);
-        }
-
-        return ret;
+private:
+    void printError(int line, string str) {
+        cout << "[error]:  in line " << line <<  " " << str << endl;
+        exit(1);
     }
 
     void stackPrint(vector<char> &stack) {
@@ -371,306 +229,6 @@ public:
         }
         cout << endl;
         cout << "-------stack-----" << endl;
-    }
-
-    /**
-     * 进行结果展示, 输出类似如下形式
-     * 符号栈             状态栈             实际计算栈         当前动作
-     * (                 0  1               0                s6
-     * ( a               0  1  6            0  23            A->a
-     * @brief stackPrint
-     * @param symbolStack
-     * @param stateStack
-     * @param numStack
-     * @param action
-     */
-    void stackPrint(vector<char> &symbolStack, vector<int>& stateStack, vector<int> numStack, string action) {
-
-        int max_column = 8;
-
-        int i = 0;
-        for(auto it : symbolStack) {
-            cout << it << " ";
-            i ++;
-        }
-        while(i++ < max_column)
-            cout << "  ";
-
-        i = 0;
-        for (auto it: stateStack) {
-            cout << std::setw(3) << it ;
-            i ++;
-        }
-        while(i++ < max_column)
-            cout << "   ";
-
-        i = 0;
-        for (auto it: numStack) {
-            cout << std::setw(4) << it;
-            i ++;
-        }
-
-        while(i++ < max_column)
-            cout << "    ";
-
-        cout << action;
-        cout << endl;
-
-    }
-
-    /**
-     * lex 输出结果的解析
-     * 解析例如
-     *      <$NUM, 9>  --> NUM 9
-     * @brief lexSplit
-     * @param str
-     * @return
-     */
-    std::pair<string, int> lexSplit(string str) {
-
-        int start = 1;
-        int pos = 0;
-        int len = str.length() - 1;
-
-        string key;
-        string value;
-        while(pos != len) {
-            if (str[pos] == ',') {
-                key = str.substr(start, pos - start);
-                break;
-            }
-            pos ++;
-        }
-
-        value = str.substr(pos + 1, len - pos - 1);
-
-        int retValue;
-        if (key == "$NUM") {
-            key = key.substr(1);
-            retValue = std::stoi( value );
-        } else {
-            retValue = 0;
-        }
-        cout << key << "---" << retValue << endl;
-
-        return std::make_pair(key, retValue);
-    }
-
-
-
-    map<string, string> expr2func;   // 保存表达式所对应的函数操作
-    map<string, char> token2ch;
-    map<string, char> gram2ch;
-
-    map<string, string> prior;   // 记录优先级
-    map<string, int> assoc;      // 记录结合律
-
-    void getDeclare(int line, string declare) {
-
-        static char ch = 'a';
-        if (declare.find("%token") != string::npos) {
-            stringstream input(declare);
-                //依次输出到result中，并存入res中
-            string token;
-            input >> token;
-            while(input>>token) {
-//                cout << "The token is " << token << endl;
-                token2ch.insert(std::make_pair(token, ch));
-                ch ++;
-            }
-            cout << "ok" << endl;
-        } else if (declare.find("%left") != string::npos) {
-            stringstream input(declare);
-            string tmp;
-            input >> tmp;
-            string r, l;
-            input >> l;
-            assoc.insert(std::make_pair(l, 1));
-            while (input >> r) {
-                cout << "l:" << l << " r:" << r << endl;
-                assoc.insert(std::make_pair(r, 1));
-                prior.insert(std::make_pair(l, r));
-            }
-        } else if (declare.find("%right") != string::npos) {
-            stringstream input(declare);
-            string tmp;
-            input >> tmp;
-            string r;
-            input >> r;
-            assoc.insert(std::make_pair(r, 2));
-        }else if (declare.find("%head") != string::npos) {
-            stringstream input(declare);
-            string tmp;
-            input >> tmp;
-            string head;
-            input >> head;
-            if (gram2ch.find(head) == gram2ch.end()) {
-                gram2ch.insert(std::make_pair(head, 'A'));
-                ch ++;
-            }
-        }
-    }
-
-
-    void getGrammar(int line, string grammar) {
-        static char ch = 'B';
-
-        // 清除空格
-        string::iterator end_pos = std::remove(grammar.begin(), grammar.end(), ' ');
-        grammar.erase(end_pos, grammar.end());
-
-        cout << grammar << endl;
-
-        vector<string> exprVec = split(grammar, ":|");
-        string head = exprVec[0];
-        if (gram2ch.find(head) == gram2ch.end()) {
-            gram2ch.insert(std::make_pair(head, ch));
-            ch ++;
-        }
-
-        for(int i = 1; i < exprVec.size(); i++) {
-            std::pair<string, string> exprfunc = makeSplitExpr(head, exprVec[i], ch);
-
-            string s;
-            s += gram2ch[head];
-            s = s + "->" + exprfunc.first;
-            expr2func.insert(std::make_pair(s, exprfunc.second));
-            cout << "Expr is " << exprfunc.first << endl;
-            cout << "Func is " << exprfunc.second << endl;
-        }
-    }
-
-    std::pair<string, string> makeSplitExpr(string& head, string& expr, char& ch) {
-
-        //cout << "origin" << expr << endl;
-        std::pair<string, string> expr_func = getExprAndFunc(expr);
-
-        //cout << "first: " << expr_func.first << endl;
-        //cout << "second: " << expr_func.second << endl;
-
-        string retExpr;
-        string pureExpr = expr_func.first;
-        int len = expr_func.first.length();
-        int pos = 1;
-        int start = 1;
-
-        while(pos < len) {
-
-            if (pureExpr[pos] == '\'') {
-                if (pos == start) {
-                    pos += 1;
-                    retExpr.push_back(pureExpr[pos]);
-                    pos += 2;
-                    start = pos;
-                } else {
-                    string tmp = pureExpr.substr(start, pos - start);
-//                    cout << "Tmp is " << tmp << endl;
-
-                    if (gram2ch.find(tmp) == gram2ch.end()) {  // 如果不属于已知的非终结符
-                        if (token2ch.find(tmp) != token2ch.end()) { // 属于已知的终结符
-                            retExpr.push_back(token2ch[tmp]);
-                        } else {            // 该符号并不已知, 将其作为新的非终结符
-                            gram2ch.insert(std::make_pair(tmp, ch));
-                            ch++;
-                            retExpr.push_back(gram2ch[tmp]);
-                        }
-                    } else {    // 该非终结符已知
-                        retExpr.push_back(gram2ch[tmp]);
-                    }
-
-                    pos += 1;
-                    retExpr.push_back(pureExpr[pos]);
-                    pos += 2;
-                    start = pos;
-                }
-            }
-            pos += 1;
-        }
-
-        if (start + 1 != pos) {
-            //cout << "There is exists" << start << pos << pureExpr.substr(start, pos-start+1) << endl;
-            string tmp = pureExpr.substr(start, pos -start +1);
-
-            if (gram2ch.find(tmp) == gram2ch.end()) {  // 如果不属于已知的非终结符
-                if (token2ch.find(tmp) != token2ch.end()) { // 属于已知的终结符
-                    retExpr.push_back(token2ch[tmp]);
-                } else {            // 该符号并不已知, 将其作为新的非终结符
-                    gram2ch.insert(std::make_pair(tmp, ch));
-                    ch++;
-                    retExpr.push_back(gram2ch[tmp]);
-                }
-            } else {    // 该非终结符已知
-                retExpr.push_back(gram2ch[tmp]);
-            }
-        }
-
-        return std::make_pair(retExpr, expr_func.second);
-    }
-
-    std::pair<string, string> getExprAndFunc(string str) {
-        string re;
-        string func;
-
-        string::iterator iter = str.end();
-        int stack = 1;
-        while(*iter != '}' && iter != str.begin()) {
-            iter --;
-        }
-
-        if (iter == str.begin()) {
-            return std::make_pair(str, "");
-        }
-
-        func.push_back('}');
-        iter --;
-        while (stack >= 1 && iter != str.begin()) {
-            if (*iter == '}') {
-                stack ++;
-            } else if (*iter == '{') {
-                stack --;
-            }
-            func.push_back(*iter);
-            iter --;
-        }
-
-        while(*iter == ' ') {
-            iter --;
-        }
-
-        re.push_back(*iter);
-        while(iter != str.begin()) {
-            iter --;
-            re.push_back(*iter);
-        }
-
-        std::reverse(func.begin(), func.end());
-        std::reverse(re.begin(), re.end());
-
-        return std::make_pair(re, func);
-    }
-
-    std::vector<std::string> split(const  std::string& s, const std::string& delim)
-    {
-        std::vector<std::string> elems;
-        size_t pos = 0;
-        size_t len = s.length();
-        size_t delim_len = delim.length();
-        int start = 0;
-        if (delim_len == 0) return elems;
-        while (pos < len)
-        {
-            if (delim.find(s[pos]) != string::npos) {
-                elems.push_back(s.substr(start, pos - start));
-                start = pos;
-            }
-            pos += 1;
-        }
-        return elems;
-    }
-
-    void printError(int line, string str) {
-        cout << "[error]:  in line " << line <<  " " << str << endl;
-        exit(1);
     }
 
 };
