@@ -18,28 +18,7 @@
  */
 #define LINK 01
 
-/**
- * 此段代码来源:
- * https://swtch.com/~rsc/regexp/
- *
- *
- * Convert infix regexp re to postfix notation
- * Insert . as explicit concatenation operator.
- *
- * 中缀转化为后缀, 同时插入'.'作为连接符
- * 例如ab, 转化为后缀为'ab.'
- *
- * 字符具有高于运算符的优先级, "m|food"匹配"m"或是"food", 如果想要匹配
- * "mood"或是"food", 需要使用"(m|f)ood"进行匹配.
- *
- *   通过此函数的使用, 使我对与lex中的正则匹配的机制有了更深的理解, 希望大家也能通过此函数
- * 的使用将正则表达式转换为后缀形式,
- *
- *   原有的程序中未解决字符转义的问题, 例如, 当我们想要'+|-', 或是想要'(|)', 原有算法均会产
- * 生问题, 而后的转换中, 我做了一些修改, 将转义字符的解析加入了进去, 上面的两个正则表达式需要
- * 以这样的方式进行传递: '\\+|\\-', '\\(|\\)' ,  使用两个转义'\'是由于c语言自身的原因, 本
- * 身会进行一次转义, 因此, 我们需要自己来添加
- */
+
 char *Re2NFA::re2post(char *re)
 {
     int nalt, natom;
@@ -181,12 +160,7 @@ char *Re2NFA::re2post(char *re)
     return buf;
 }
 
-/*
- * 由后缀表达式形式转化为NFA
- * 代码参考(仅参考) https://swtch.com/~rsc/regexp/
- *
- * 此函数中new了众多变量, 及时delete
- */
+
 State *Re2NFA::post2nfa(char *postfix)
 {
     char * p;

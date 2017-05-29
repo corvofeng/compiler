@@ -27,6 +27,7 @@ using std::string;
 using std::cout;
 using std::endl;
 using std::cerr;
+using std::ios;
 
 class Lex
 {
@@ -41,14 +42,30 @@ public:
     N2DFA* pN2DFA = NULL;
 
     Lex (string _lexFile) {
-        in = new std::ifstream(_lexFile);
+
+
+        std::ifstream* ifile = new std::ifstream();
+        ifile->open(_lexFile);
+        if(!ifile->is_open()) {
+            printError(0, "Please input valid file");
+
+        }
+        in = ifile;
+
         this->lexFile = _lexFile;
         this->out = &std::cout;
     }
 
     Lex (string _lexFile, string _outCFile) {
-        in = new std::ifstream(_lexFile);
+        std::ifstream* ifile = new std::ifstream();
+        ifile->open(_lexFile);
+        if(!ifile->is_open()) {
+            printError(0, "Please input valid file");
+
+        }
+        in = ifile;
         this->lexFile = _lexFile;
+
         std::ofstream *fout = new std::ofstream(_outCFile);
         this->out = fout;
     }

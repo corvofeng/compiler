@@ -44,13 +44,26 @@ public:
     LR1* lr1 = NULL;
 
     Yacc (string _yaccFile) {
-        in = new std::ifstream(_yaccFile);
+
+        std::ifstream* ifile = new std::ifstream();
+        ifile->open(_yaccFile);
+        if(!ifile->is_open()) {
+            printError(0, "Please input valid file");
+
+        }
+        in = ifile;
         this->yaccFile = _yaccFile;
         this->out = &std::cout;
     }
 
     Yacc (string _yaccFile, string _outCFile) {
-        in = new std::ifstream(_yaccFile);
+        std::ifstream* ifile = new std::ifstream();
+        ifile->open(_yaccFile);
+        if(!ifile->is_open()) {
+            printError(0, "Please input valid file");
+
+        }
+        in = ifile;
         this->yaccFile = _yaccFile;
         std::ofstream *fout = new std::ofstream(_outCFile);
 

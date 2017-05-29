@@ -13,18 +13,24 @@ make -j4
 ## Lex运行
 
 ```bash
-cd bin
-./comp
+./bin/lex_rel input/require.l
 
-cd ../input
-gcc out.c -o out
-./out main.c
+gcc lex.yy.c -o out
+
+./out input/main.c
 ```
 
-`lex`主要是将`require.l`文件解析, 然后再生成`out.c`文件
+`lex`主要是将`require.l`文件解析, 然后再生成`lex.yy.c`文件
 
 
 ## Yacc运行
+
+```bash
+# 使用词法分析工具生成待解析文件
+./out input/yacc_test.c > lex.out
+
+./bin/yacc_rel ./input/require.y lex.out
+```
 
 > Yacc输入
 

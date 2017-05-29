@@ -93,23 +93,26 @@ void yacc_test()
 
 
     //LR1 *lr1 = new LR1(expr3, 3, "E", prior, assoc);
-    /*
-    LR1 *lr1 = new LR1(exprFunc4, "A", prior, assoc);
+    LR1 *lr1 = new LR1(expr2, 6, "S", prior, assoc);
+    lr1->grammar->printGram();
+    lr1->grammar->printFirst();
     lr1->iterms();
 
-    //lr1.printLR1();
+
+//    lr1->printLR1();
 
     lr1->makeACTIONGOTO();
     lr1->printACTIONGOTO();
 
     delete lr1;
-    */
 
+    /*
     Yacc *yacc = new Yacc("../input/require.y", "../input/output_yacc.c");
     yacc->scanner();
     yacc->buildTable();
-    yacc->parse("../input/lexout");
+    yacc->parse("../input/lex.out");
     delete yacc;
+    */
 
     //Grammar grammar(expr, 8, "E");
     /*

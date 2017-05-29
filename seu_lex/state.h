@@ -74,9 +74,9 @@ public:
 class DState {
 public:
 
-    std::map<DState*, int> out;		// 记录DFA节点能够到达的状态以及路径
-    std::set<State*> coreState;		// 当前状态所代表的NFA状态中的核心状态, 用于之后进行状态比较
-    std::set<State*> allState;		// 记录所有可能状态, 在getAllState调用后被填充
+    std::map<DState*, int> out;     // 记录DFA节点能够到达的状态以及路径
+    std::set<State*> coreState;     // 当前状态所代表的NFA状态中的核心状态, 用于之后进行状态比较
+    std::set<State*> allState;      // 记录所有可能状态, 在getAllState调用后被填充
     bool hasTravel = false;         // 构建DFA时, 表示该状态是否已经被遍历
     bool isEnd = false;             // 是否为接受节点
     std::string endFunc;            // 结束状态中所对应的执行函数, 只有该节点为结束状态才可以操纵该对象
