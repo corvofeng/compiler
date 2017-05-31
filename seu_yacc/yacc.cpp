@@ -115,13 +115,15 @@ void yacc_test()
     */
 
     //Grammar grammar(expr, 8, "E");
-    /*
+
     Grammar grammar(expr1, 3, "S");
+    grammar.makeFirst();
+    grammar.printFirst();
 
     grammar.printGram();
     grammar.getNonTermHead();
     grammar.makeFirst();
-    */
+
 
 //    printf("%d\n", sizeof(expr));
 
